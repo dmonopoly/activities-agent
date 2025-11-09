@@ -129,8 +129,8 @@ activities-agent/
 │   └── lib/              # Utilities and API client
 ├── backend/              # Python FastAPI backend
 │   ├── agents/           # Agent system
-│   │   ├── orchestrator.py  # Main agent orchestrator
-│   │   └── tools/        # Tool implementations
+│   │   ├── orchestrator.py  # Main agent orchestrator, acts as MCP client to call tools, stores tool list
+│   │   └── tools/        # Tool implementations, like an MCP server providing Tool interfaces.
 │   ├── api/              # API routes
 │   ├── models/           # Data models
 │   ├── tests/            # Integration tests
