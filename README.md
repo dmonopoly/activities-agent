@@ -1,6 +1,6 @@
 # Activities Agent
 
-An AI-powered agent system for discovering personalized activities and date ideas. Built with Next.js, Python FastAPI, and OpenRouter LLM integration.
+An AI-powered agent system for discovering personalized activities and social event ideas. Built with Next.js, Python FastAPI, and OpenRouter LLM integration.
 
 ## Features
 
@@ -90,11 +90,9 @@ cd frontend
 npm install
 ```
 
-3. Set up environment variables:
-```bash
-cp .env.example .env.local
-# Edit .env.local if needed (default should work)
-```
+3. (Optional) Set up environment variables:
+   - Create `.env.local` if you need to customize the API URL
+   - Default API URL is `http://localhost:8000/api` (no config needed)
 
 4. Run the development server:
 ```bash

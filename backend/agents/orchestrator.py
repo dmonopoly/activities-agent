@@ -1,9 +1,15 @@
 """Agent orchestrator - Main agent with LLM and tool calling"""
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from openai import OpenAI
 import os
 import sys
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+# This ensures env vars are available when this module is imported
+env_path = Path(__file__).parent.parent / ".env"
+load_dotenv(dotenv_path=env_path)
 
 # Add backend directory to path for imports
 backend_dir = Path(__file__).parent.parent

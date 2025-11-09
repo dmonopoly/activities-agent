@@ -1,9 +1,7 @@
 """API routes for FastAPI backend"""
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
-import json
 import sys
 from pathlib import Path
 
