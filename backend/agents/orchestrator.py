@@ -1,8 +1,10 @@
 """Agent orchestrator - Main agent with LLM and tool calling"""
-from typing import List, Dict, Any
-from openai import OpenAI
+import json
 import os
 import sys
+
+from typing import List, Dict, Any
+from openai import OpenAI
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -104,15 +106,21 @@ class AgentOrchestrator:
         ]
     
     def _execute_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Any:
-        """Execute a tool function"""
+        """Execute a tool function with automatic context injection based on tool definition"""
         if tool_name not in TOOL_FUNCTIONS:
             return {"error": f"Unknown tool: {tool_name}"}
         
         func = TOOL_FUNCTIONS[tool_name]
         
-        # Handle user_id injection for preference tools
-        if tool_name in ["get_user_preferences", "update_user_preferences"]:
-            if "user_id" not in arguments:
+        # Check tool definition to see if user_id is required and inject if missing
+        tool_def = next(
+            (t for t in ALL_TOOLS if t.get("function", {}).get("name") == tool_name),
+            None
+        )
+        if tool_def:
+            required_params = tool_def.get("function", {}).get("parameters", {}).get("required", [])
+            if "user_id" in required_params:
+                # Always override user_id for preference tools to ensure consistency
                 arguments["user_id"] = self.user_id
         
         try:
@@ -132,30 +140,34 @@ class AgentOrchestrator:
         Returns:
             Dictionary with response and any tool results
         """
-        # Add user message to conversation
         self.conversation_history.append({"role": "user", "content": message})
         
         max_iterations = 5
         iteration = 0
+        all_tool_results = []  # Accumulate tool results across all iterations
         
         while iteration < max_iterations:
+            print('-- iteration', iteration)
+            print('conversation history', self.conversation_history)
             iteration += 1
             
-            # Call LLM
             response = client.chat.completions.create(
                 model=model,
                 messages=self.conversation_history,
                 tools=ALL_TOOLS,
                 tool_choice="auto"
             )
-            
+
+            print('response', response)
             message_response = response.choices[0].message
             
-            # Add assistant message to history
-            self.conversation_history.append({
+            assistant_message = {
                 "role": "assistant",
-                "content": message_response.content,
-                "tool_calls": [
+                "content": message_response.content
+            }
+            # Only include tool_calls if they exist (API doesn't allow empty arrays)
+            if message_response.tool_calls:
+                assistant_message["tool_calls"] = [
                     {
                         "id": tc.id,
                         "type": tc.type,
@@ -163,47 +175,43 @@ class AgentOrchestrator:
                             "name": tc.function.name,
                             "arguments": tc.function.arguments
                         }
-                    } for tc in (message_response.tool_calls or [])
+                    } for tc in message_response.tool_calls
                 ]
-            })
+            self.conversation_history.append(assistant_message)
             
-            # If no tool calls, return the response
             if not message_response.tool_calls:
                 return {
                     "response": message_response.content,
-                    "tool_results": []
+                    "tool_results": all_tool_results
                 }
             
             # Execute tool calls
-            tool_results = []
             for tool_call in message_response.tool_calls:
                 tool_name = tool_call.function.name
-                import json
                 try:
                     arguments = json.loads(tool_call.function.arguments)
                 except:
                     arguments = {}
                 
+                print(f'executing tool {tool_name} with args {arguments}')
                 result = self._execute_tool(tool_name, arguments)
-                
-                tool_results.append({
+
+                print('got tool result', result)
+                tool_result_entry = {
                     "tool": tool_name,
                     "result": result
-                })
+                }
+                all_tool_results.append(tool_result_entry)
                 
-                # Add tool result to conversation
                 self.conversation_history.append({
                     "role": "tool",
                     "tool_call_id": tool_call.id,
                     "content": json.dumps(result)
                 })
             
-            # Continue loop to let LLM process tool results
-        
-        # If we hit max iterations, return last response
         return {
             "response": self.conversation_history[-1].get("content", "I encountered an issue processing your request."),
-            "tool_results": tool_results
+            "tool_results": all_tool_results
         }
     
     def reset_conversation(self):

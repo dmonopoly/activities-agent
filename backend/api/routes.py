@@ -98,7 +98,8 @@ async def update_preferences(user_id: str, preferences: PreferencesUpdate):
     """Update user preferences"""
     try:
         prefs_dict = preferences.dict(exclude_unset=True)
-        updated = update_user_preferences(user_id, prefs_dict)
+        # Unpack dictionary as keyword arguments to match new function signature
+        updated = update_user_preferences(user_id=user_id, **prefs_dict)
         return updated
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

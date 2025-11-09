@@ -133,6 +133,7 @@ activities-agent/
 │   │   └── tools/        # Tool implementations
 │   ├── api/              # API routes
 │   ├── models/           # Data models
+│   ├── tests/            # Integration tests
 │   └── main.py           # FastAPI app entry point
 └── README.md
 ```
@@ -171,6 +172,35 @@ The agent system uses a merged architecture where:
 - Client components for interactivity
 - Server-side rendering where appropriate
 - Tailwind CSS for styling
+
+## Testing
+
+### Running Backend Tests
+
+The backend includes integration tests for the agent orchestrator and tool calling functionality.
+
+1. Ensure you're in the backend directory with the virtual environment activated:
+```bash
+cd backend
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+2. Run all tests:
+```bash
+pytest tests/ -v
+```
+
+3. Run a specific test file:
+```bash
+pytest tests/test_orchestrator.py -v
+```
+
+4. Run tests with more detailed output:
+```bash
+pytest tests/ -v -s
+```
+
+**Note**: Tests require an `OPENROUTER_API_KEY` environment variable to be set, as they make real API calls to test the orchestrator's tool calling functionality.
 
 ## Environment Variables
 

@@ -49,13 +49,24 @@ def get_user_preferences(user_id: str) -> Dict[str, Any]:
     return user_prefs
 
 
-def update_user_preferences(user_id: str, preferences: Dict[str, Any]) -> Dict[str, Any]:
+def update_user_preferences(
+    user_id: str,
+    location: Optional[str] = None,
+    interests: Optional[list] = None,
+    budget_min: Optional[float] = None,
+    budget_max: Optional[float] = None,
+    date_preferences: Optional[str] = None
+) -> Dict[str, Any]:
     """
     Update user preferences
     
     Args:
         user_id: The user's unique identifier
-        preferences: Dictionary of preferences to update
+        location: Preferred location (city, neighborhood, etc.)
+        interests: List of interests (e.g., ['outdoor', 'art', 'music'])
+        budget_min: Minimum budget in dollars
+        budget_max: Maximum budget in dollars
+        date_preferences: Preferred time (e.g., 'weekend', 'evening', 'anytime')
         
     Returns:
         Updated user preferences
@@ -71,10 +82,17 @@ def update_user_preferences(user_id: str, preferences: Dict[str, Any]) -> Dict[s
             "date_preferences": None
         }
     
-    # Update only provided fields
-    for key, value in preferences.items():
-        if key != "user_id" and value is not None:
-            prefs[user_id][key] = value
+    # Update only provided (non-None) fields
+    if location is not None:
+        prefs[user_id]["location"] = location
+    if interests is not None:
+        prefs[user_id]["interests"] = interests
+    if budget_min is not None:
+        prefs[user_id]["budget_min"] = budget_min
+    if budget_max is not None:
+        prefs[user_id]["budget_max"] = budget_max
+    if date_preferences is not None:
+        prefs[user_id]["date_preferences"] = date_preferences
     
     _save_preferences(prefs)
     return prefs[user_id]
