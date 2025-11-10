@@ -27,12 +27,16 @@ try:
         update_user_preferences,
         TOOL_DEFINITIONS as PREFERENCES_TOOLS
     )
+    from agents.tools.google_maps import search_places_for_dates, TOOL_DEFINITION as GOOGLE_MAPS_TOOL
+    from agents.tools.weather import get_weather_for_location, TOOL_DEFINITION as WEATHER_TOOL
 except ImportError as e:
     # Fallback for when running from different directory
     import importlib.util
     scraper_path = Path(__file__).parent / "tools" / "scraper.py"
     sheets_path = Path(__file__).parent / "tools" / "sheets.py"
     prefs_path = Path(__file__).parent / "tools" / "preferences.py"
+    google_maps_path = Path(__file__).parent / "tools" / "google_maps.py"
+    weather_path = Path(__file__).parent / "tools" / "weather.py"
     
     def load_module(path):
         spec = importlib.util.spec_from_file_location(path.stem, path)
@@ -43,6 +47,8 @@ except ImportError as e:
     scraper_module = load_module(scraper_path)
     sheets_module = load_module(sheets_path)
     prefs_module = load_module(prefs_path)
+    google_maps_module = load_module(google_maps_path)
+    weather_module = load_module(weather_path)
     
     scrape_activities = scraper_module.scrape_activities
     SCRAPER_TOOL = scraper_module.TOOL_DEFINITION
@@ -51,6 +57,10 @@ except ImportError as e:
     get_user_preferences = prefs_module.get_user_preferences
     update_user_preferences = prefs_module.update_user_preferences
     PREFERENCES_TOOLS = prefs_module.TOOL_DEFINITIONS
+    search_places_for_dates = google_maps_module.search_places_for_dates
+    GOOGLE_MAPS_TOOL = google_maps_module.TOOL_DEFINITION
+    get_weather_for_location = weather_module.get_weather_for_location
+    WEATHER_TOOL = weather_module.TOOL_DEFINITION
 
 # Initialize OpenAI client (works with OpenRouter)
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
@@ -68,7 +78,9 @@ client = OpenAI(
 ALL_TOOLS = [
     SCRAPER_TOOL,
     SHEETS_TOOL,
-    *PREFERENCES_TOOLS
+    *PREFERENCES_TOOLS,
+    GOOGLE_MAPS_TOOL,
+    WEATHER_TOOL
 ]
 
 # Tool execution mapping
@@ -77,6 +89,8 @@ TOOL_FUNCTIONS = {
     "save_to_sheets": save_to_sheets,
     "get_user_preferences": get_user_preferences,
     "update_user_preferences": update_user_preferences,
+    "search_places_for_dates": search_places_for_dates,
+    "get_weather_for_location": get_weather_for_location,
 }
 
 # System prompt
@@ -84,11 +98,15 @@ SYSTEM_PROMPT = """You are a helpful assistant that discovers fun activities and
 
 Your capabilities:
 1. Search for activities using scrape_activities tool
-2. Save activities to Google Sheets using save_to_sheets tool
-3. Get and update user preferences using preference tools
+2. Search for date activities between two locations using search_places_for_dates tool (Google Maps integration)
+3. Get weather information using get_weather_for_location tool
+4. Save activities to Google Sheets using save_to_sheets tool
+5. Get and update user preferences using preference tools
 
 When a user asks for activities:
 - First check their preferences using get_user_preferences
+- If they mention two locations (e.g., "between X and Y"), use search_places_for_dates to find places between those locations
+- For outdoor activities, consider checking weather using get_weather_for_location
 - Use those preferences to search for relevant activities
 - Present activities in a friendly, engaging way
 - Offer to save activities to a spreadsheet when appropriate
