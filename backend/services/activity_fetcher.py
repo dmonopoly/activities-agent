@@ -14,17 +14,21 @@ from agents.tools.google_maps import (
 from agents.tools.preferences import get_user_preferences
 
 
-# Map interests to Google Maps place types
+# Map interests to Google Maps place types (easier to cache)
 INTEREST_TO_PLACE_TYPES = {
     "outdoor": ["park", "hiking_area", "campground"],
     "art": ["art_gallery", "museum"],
     "music": ["night_club", "bar"],
     "food": ["restaurant", "bakery"],
     "coffee": ["cafe"],
+    "unique coffee shops": ["cafe"],
     "romantic": ["restaurant", "spa"],
     "shopping": ["shopping_mall", "clothing_store"],
     "entertainment": ["movie_theater", "amusement_park", "bowling_alley"],
     "nature": ["park", "zoo", "aquarium"],
+    "walks": ["park", "tourist_attraction"],
+    "beautiful views": ["tourist_attraction", "park"],
+    "views": ["tourist_attraction", "park"],
 }
 
 # Default place types if no interests specified
