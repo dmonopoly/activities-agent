@@ -1,6 +1,8 @@
-# Activities Agent
+# Overview
 
 An AI-powered agent system for discovering personalized activities and social event ideas. Built with Next.js, Python FastAPI, and OpenRouter LLM integration.
+
+The core focus initial focus is to recommend activities between two locations to help two people who live in different areas to easily meet.
 
 ## Features
 

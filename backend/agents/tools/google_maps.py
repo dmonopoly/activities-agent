@@ -89,6 +89,265 @@ def _analyze_reviews(reviews: List[Dict[str, Any]], user_interests: Optional[Lis
     }
 
 
+def get_transit_stops_between(
+    location_a: str,
+    location_b: str
+) -> Dict[str, Any]:
+    """
+    Get transit stops along the route between two locations.
+    
+    Uses Google Maps Directions API with transit mode to find stops
+    (subway stations, bus stops, etc.) along the route.
+    
+    Args:
+        location_a: First location (address or coordinates as "lat,lng")
+        location_b: Second location (address or coordinates as "lat,lng")
+        
+    Returns:
+        Dictionary with list of transit stops and metadata:
+        {
+            "stops": [{"name": str, "lat": float, "lng": float, "type": str}, ...],
+            "location_a": str,
+            "location_b": str,
+            "error": str (optional)
+        }
+    """
+    api_key = os.getenv("GOOGLE_MAPS_API_KEY")
+    
+    if not api_key:
+        return {
+            "error": "GOOGLE_MAPS_API_KEY not set. Please set it in your .env file.",
+            "stops": []
+        }
+    
+    try:
+        gmaps = googlemaps.Client(key=api_key)
+        
+        # Get transit directions
+        directions_result = gmaps.directions(
+            origin=location_a,
+            destination=location_b,
+            mode="transit"
+        )
+        
+        if not directions_result:
+            return {
+                "error": f"No transit route found between {location_a} and {location_b}",
+                "stops": []
+            }
+        
+        # Extract stops from the route
+        stops = []
+        seen_stops = set()  # Track unique stops by name
+        
+        route = directions_result[0]
+        legs = route.get("legs", [])
+        
+        for leg in legs:
+            steps = leg.get("steps", [])
+            
+            for step in steps:
+                # Only process transit steps
+                if step.get("travel_mode") != "TRANSIT":
+                    continue
+                
+                transit_details = step.get("transit_details", {})
+                
+                # Get departure stop
+                departure_stop = transit_details.get("departure_stop", {})
+                if departure_stop:
+                    stop_name = departure_stop.get("name", "")
+                    if stop_name and stop_name not in seen_stops:
+                        seen_stops.add(stop_name)
+                        location = departure_stop.get("location", {})
+                        line = transit_details.get("line", {})
+                        vehicle = line.get("vehicle", {})
+                        stops.append({
+                            "name": stop_name,
+                            "lat": location.get("lat"),
+                            "lng": location.get("lng"),
+                            "type": vehicle.get("type", "TRANSIT"),
+                            "line_name": line.get("short_name") or line.get("name", "")
+                        })
+                
+                # Get arrival stop
+                arrival_stop = transit_details.get("arrival_stop", {})
+                if arrival_stop:
+                    stop_name = arrival_stop.get("name", "")
+                    if stop_name and stop_name not in seen_stops:
+                        seen_stops.add(stop_name)
+                        location = arrival_stop.get("location", {})
+                        line = transit_details.get("line", {})
+                        vehicle = line.get("vehicle", {})
+                        stops.append({
+                            "name": stop_name,
+                            "lat": location.get("lat"),
+                            "lng": location.get("lng"),
+                            "type": vehicle.get("type", "TRANSIT"),
+                            "line_name": line.get("short_name") or line.get("name", "")
+                        })
+        
+        return {
+            "stops": stops,
+            "location_a": location_a,
+            "location_b": location_b,
+            "stop_count": len(stops)
+        }
+        
+    except Exception as e:
+        return {
+            "error": f"Error getting transit stops: {str(e)}",
+            "stops": []
+        }
+
+
+def search_places_near_location(
+    location: str,
+    place_types: Optional[List[str]] = None,
+    price_level: Optional[int] = None,
+    min_rating: float = 4.0,
+    radius: float = 1.0,
+    user_interests: Optional[List[str]] = None
+) -> Dict[str, Any]:
+    """
+    Search for places near a single location using Google Maps Places API.
+    
+    Args:
+        location: Location (address or coordinates as "lat,lng")
+        place_types: List of place types (e.g., ["cafe", "restaurant", "park"])
+        price_level: Price level filter (0-4)
+        min_rating: Minimum rating threshold (default: 4.0)
+        radius: Search radius in miles (default: 1.0)
+        user_interests: List of interests for review matching
+        
+    Returns:
+        Dictionary with list of activities and metadata
+    """
+    api_key = os.getenv("GOOGLE_MAPS_API_KEY")
+    
+    if not api_key:
+        return {
+            "error": "GOOGLE_MAPS_API_KEY not set. Please set it in your .env file.",
+            "activities": []
+        }
+    
+    try:
+        gmaps = googlemaps.Client(key=api_key)
+        
+        # Geocode location if it's an address
+        if "," in location and all(c.isdigit() or c in ".-," for c in location.replace(" ", "")):
+            # Already coordinates
+            parts = location.split(",")
+            search_lat, search_lng = float(parts[0]), float(parts[1])
+            formatted_location = location
+        else:
+            loc_data = _geocode_location(gmaps, location)
+            if not loc_data:
+                return {
+                    "error": f"Could not geocode location: {location}",
+                    "activities": []
+                }
+            search_lat = loc_data["lat"]
+            search_lng = loc_data["lng"]
+            formatted_location = loc_data["formatted_address"]
+        
+        # Default place types if not provided
+        if not place_types:
+            place_types = ["cafe", "restaurant", "park", "tourist_attraction"]
+        
+        activities = []
+        
+        # Search for each place type
+        for place_type in place_types:
+            places_result = gmaps.places_nearby(
+                location=(search_lat, search_lng),
+                radius=int(radius * NUM_METERS_PER_MILE),
+                type=place_type
+            )
+            
+            # Fallback to text search
+            if not places_result.get("results"):
+                text_search = gmaps.places(
+                    query=place_type,
+                    location=(search_lat, search_lng),
+                    radius=int(radius * NUM_METERS_PER_MILE)
+                )
+                if text_search.get("results"):
+                    places_result = text_search
+            
+            # Process each place
+            for place in places_result.get("results", [])[:5]:  # Limit to 5 per type per location
+                place_id = place.get("place_id")
+                rating = place.get("rating")
+                price_level_place = place.get("price_level")
+                
+                if rating and rating < min_rating:
+                    continue
+                
+                if price_level is not None and price_level_place is not None:
+                    if price_level_place > price_level:
+                        continue
+                
+                try:
+                    place_details = gmaps.place(
+                        place_id=place_id,
+                        fields=["name", "formatted_address", "rating", "price_level",
+                               "opening_hours", "reviews", "geometry", "url", "types"]
+                    )
+                    
+                    details = place_details.get("result", {})
+                    reviews = details.get("reviews", [])
+                    review_analysis = _analyze_reviews(reviews, user_interests)
+                    
+                    opening_hours = details.get("opening_hours", {})
+                    hours_text = None
+                    if opening_hours:
+                        periods = opening_hours.get("weekday_text", [])
+                        if periods:
+                            hours_text = "; ".join(periods)
+                    
+                    geometry = details.get("geometry", {})
+                    location_coords = geometry.get("location", {})
+                    
+                    activity = {
+                        "name": details.get("name", place.get("name", "Unknown")),
+                        "location": details.get("formatted_address", place.get("vicinity", "Unknown")),
+                        "description": review_analysis.get("summary", ""),
+                        "price": f"${'$' * (price_level_place or 0)}" if price_level_place is not None else None,
+                        "date": hours_text,  # Using opening hours as "date" for sheets compatibility
+                        "url": details.get("url"),
+                        "category": place_type.replace("_", " ").title(),
+                        "gmaps_place_id": place_id,
+                        "gmaps_rating": rating,
+                        "gmaps_price_level": price_level_place,
+                        "near_stop": location,
+                        "coordinates": {
+                            "lat": location_coords.get("lat"),
+                            "lng": location_coords.get("lng")
+                        } if location_coords else None
+                    }
+                    
+                    activities.append(activity)
+                    
+                except Exception as e:
+                    print(f"Error getting details for place {place_id}: {e}")
+                    continue
+        
+        activities.sort(key=lambda x: x.get("gmaps_rating", 0) or 0, reverse=True)
+        
+        return {
+            "activities": activities,
+            "search_location": formatted_location,
+            "count": len(activities)
+        }
+        
+    except Exception as e:
+        return {
+            "error": f"Error searching places: {str(e)}",
+            "activities": []
+        }
+
+
 def search_places_for_dates(
     location1: str,
     location2: str,

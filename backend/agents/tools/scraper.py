@@ -11,7 +11,11 @@ backend_dir = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(backend_dir))
 
 
-def scrape_activities(query: str, location: Optional[str] = None, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+def scrape_activities(
+    query: str,
+    location_a: Optional[str] = None, 
+    location_b: Optional[str] = None,
+    filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
     """
     Scrape activities from the web based on query and location
     
