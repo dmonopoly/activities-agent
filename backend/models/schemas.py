@@ -18,7 +18,6 @@ class UserPreferences(BaseModel):
     location: Optional[str] = None
     interests: List[str] = []
     budget: Optional[str] = None
-    date_preferences: Optional[str] = None
 
 
 class ChatMessage(BaseModel):

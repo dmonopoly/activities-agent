@@ -59,7 +59,6 @@ class PreferencesUpdate(BaseModel):
     interests: Optional[List[str]] = None
     budget_min: Optional[float] = None
     budget_max: Optional[float] = None
-    date_preferences: Optional[str] = None
 
 
 @router.post("/chat", response_model=ChatResponse)
