@@ -1,0 +1,10 @@
+General instructions:
+- Follow instructions carefully and to completion; do not leave TODOs.
+- If you start a background process, notify the user and make sure to end the process when you are done working.
+- Be succinct in your code.
+- Keep comments to a minimum. Only include a comment if there is an unusual edge case.
+- When adding tests:
+  - Check existing tests so you avoid writing duplicates.
+  - Test the bare minimum necessary.
+  - Factor out commonly reused parts in tests (when there are at least 3 usages).
+- Read the first few paragraphs of README.md so you understand the high-level goal of the project.
