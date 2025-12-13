@@ -63,7 +63,7 @@ def save_to_sheets(activities: List[Dict[str, Any]], spreadsheet_id: Optional[st
             # Create a new spreadsheet
             spreadsheet = {
                 'properties': {
-                    'title': 'Activities & Date Ideas'
+                    'title': 'Activity Ideas'
                 }
             }
             spreadsheet = service.spreadsheets().create(body=spreadsheet, fields='spreadsheetId').execute()

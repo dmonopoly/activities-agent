@@ -10,7 +10,7 @@ def scrape_activities(query: str, location: Optional[str] = None, filters: Optio
     Scrape activities from the web based on query and location
     
     Args:
-        query: Search query for activities (e.g., "date ideas", "fun activities")
+        query: Search query for activities
         location: Location to search in (city, neighborhood, etc.)
         filters: Optional filters (category, price_range, etc.)
         
@@ -98,13 +98,13 @@ TOOL_DEFINITION = {
     "type": "function",
     "function": {
         "name": "scrape_activities",
-        "description": "Search and scrape activities/date ideas from the web based on query, location, and optional filters",
+        "description": "Search and scrape activities from the web based on query, location, and optional filters",
         "parameters": {
             "type": "object",
             "properties": {
                 "query": {
                     "type": "string",
-                    "description": "Search query for activities (e.g., 'date ideas', 'fun activities', 'outdoor activities')"
+                    "description": "Search query for activities (e.g., 'date ideas', 'nature', 'unique coffee shops')"
                 },
                 "location": {
                     "type": "string",
