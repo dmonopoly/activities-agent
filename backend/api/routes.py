@@ -65,16 +65,18 @@ class PreferencesUpdate(BaseModel):
 @router.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(chat_message: ChatMessage):
     """Chat endpoint for agent interaction"""
+    print(f"[DEBUG][/chat] Chat message: {chat_message}")
     user_id = chat_message.user_id or "default"
     
-    # Get or create agent for user
     if user_id not in agents:
+        print(f"[DEBUG][/chat] Creating new agent for user: {user_id}")
         agents[user_id] = AgentOrchestrator(user_id=user_id)
     
     agent = agents[user_id]
     
     try:
         result = agent.process_message(chat_message.message)
+        print(f"[DEBUG][/chat] Result: {result}")
         return ChatResponse(
             response=result["response"],
             tool_results=result.get("tool_results", [])

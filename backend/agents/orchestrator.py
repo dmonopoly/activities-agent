@@ -5,6 +5,7 @@ import sys
 
 from typing import List, Dict, Any
 from openai import OpenAI
+from openai.types.chat import ChatCompletion
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -141,24 +142,25 @@ class AgentOrchestrator:
             Dictionary with response and any tool results
         """
         self.conversation_history.append({"role": "user", "content": message})
-        
+        print(f"[DEBUG][process_message] Conversation history length incremented to {len(self.conversation_history)}")
+
         max_iterations = 5
         iteration = 0
         all_tool_results = []  # Accumulate tool results across all iterations
         
         while iteration < max_iterations:
-            print('-- iteration', iteration)
-            print('conversation history', self.conversation_history)
+            print('DEBUG][process_message] Iteration', iteration)
+            print('DEBUG][process_message] Conversation history', self.conversation_history)
             iteration += 1
             
-            response = client.chat.completions.create(
+            response: ChatCompletion = client.chat.completions.create(
                 model=model,
                 messages=self.conversation_history,
                 tools=ALL_TOOLS,
                 tool_choice="auto"
             )
 
-            print('response', response)
+            print('DEBUG][process_message] response', response)
             message_response = response.choices[0].message
             
             assistant_message = {
@@ -193,10 +195,10 @@ class AgentOrchestrator:
                 except:
                     arguments = {}
                 
-                print(f'executing tool {tool_name} with args {arguments}')
+                print(f'DEBUG][process_message] Executing tool {tool_name} with args {arguments}')
                 result = self._execute_tool(tool_name, arguments)
 
-                print('got tool result', result)
+                print('DEBUG][process_message] Got tool result', result)
                 tool_result_entry = {
                     "tool": tool_name,
                     "result": result

@@ -132,6 +132,7 @@ activities-agent/
 │   │   ├── orchestrator.py  # Main agent orchestrator, acts as MCP client to call tools, stores tool list
 │   │   └── tools/        # Tool implementations, like an MCP server providing Tool interfaces.
 │   ├── api/              # API routes
+│   ├── docs/             # Documentation, including Backend Architecture
 │   ├── models/           # Data models
 │   ├── tests/            # Integration tests
 │   └── main.py           # FastAPI app entry point
@@ -149,6 +150,8 @@ This project demonstrates:
 - **Google Sheets API**: Integration with Google services
 - **Next.js + Python**: Full-stack architecture
 - **Modern Chat UI**: Conversational interface patterns
+
+For a detailed explanation of backend architectural decisions, see [backend/docs/ARCHITECTURE.md](backend/docs/ARCHITECTURE.md).
 
 ## API Endpoints
 
