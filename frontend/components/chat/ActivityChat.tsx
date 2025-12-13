@@ -90,11 +90,11 @@ export default function ActivityChat({ userId = 'default' }: ActivityChatProps) 
   ];
 
   return (
-    <div className="flex flex-col h-full max-w-4xl mx-auto">
+    <div className="flex flex-col h-full w-full max-w-4xl mx-auto">
       {!hasMessages ? (
         <>
           {/* Empty State - Header and Input positioned higher */}
-          <div className="flex-1 flex flex-col items-center justify-start pt-12">
+          <div className="flex-1 flex flex-col items-center justify-start pt-16 min-h-0">
             <div className="text-center text-gray-500 mb-8">
               <h2 className="text-2xl font-semibold mb-2">What can I help with?</h2>
             </div>

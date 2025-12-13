@@ -26,12 +26,12 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header - Airbnb-inspired */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+    <div className="min-h-screen bg-white flex flex-col">
+      {/* Header - Clean and minimal */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="text-2xl font-bold text-pink-600 hover:text-pink-700">
+            <Link href="/" className="text-2xl font-bold text-[#FF385D]">
               Activities Agent
             </Link>
             <nav className="flex gap-6">
@@ -46,11 +46,9 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Main Chat Interface */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
-          <ActivityChat userId={userId} />
-        </div>
+      {/* Main Chat Interface - Immersive full-height */}
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <ActivityChat userId={userId} />
       </main>
     </div>
   );

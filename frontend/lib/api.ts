@@ -42,6 +42,7 @@ export const api = {
     user_id: string = "default",
     conversation_id?: string
   ): Promise<ChatResponse> {
+    console.log("Chatting:", message, user_id, conversation_id);
     const response = await fetch(`${API_BASE_URL}/chat`, {
       method: "POST",
       headers: {
@@ -54,6 +55,7 @@ export const api = {
       }),
     });
 
+    console.log("Response:", response);
     if (!response.ok) {
       throw new Error(`Chat API error: ${response.statusText}`);
     }
