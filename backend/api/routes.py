@@ -2,45 +2,15 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
-import sys
-from pathlib import Path
 
-# Add backend directory to path
-backend_dir = Path(__file__).parent.parent
-if str(backend_dir) not in sys.path:
-    sys.path.insert(0, str(backend_dir))
-
-try:
-    from agents.orchestrator import AgentOrchestrator
-    from agents.tools.preferences import get_user_preferences, update_user_preferences
-    from services.activity_fetcher import fetch_activities
-except ImportError:
-    # Handle import errors gracefully
-    import importlib.util
-    from pathlib import Path
-    
-    def load_module(module_path, module_name):
-        spec = importlib.util.spec_from_file_location(module_name, module_path)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        return module
-    
-    orchestrator_path = backend_dir / "agents" / "orchestrator.py"
-    prefs_path = backend_dir / "agents" / "tools" / "preferences.py"
-    activity_fetcher_path = backend_dir / "services" / "activity_fetcher.py"
-    
-    orchestrator_module = load_module(orchestrator_path, "orchestrator")
-    prefs_module = load_module(prefs_path, "preferences")
-    activity_fetcher_module = load_module(activity_fetcher_path, "activity_fetcher")
-    
-    AgentOrchestrator = orchestrator_module.AgentOrchestrator
-    get_user_preferences = prefs_module.get_user_preferences
-    update_user_preferences = prefs_module.update_user_preferences
-    fetch_activities = activity_fetcher_module.fetch_activities
+from agents.orchestrator import AgentOrchestrator
+from agents.tools.preferences import get_user_preferences, update_user_preferences
+from agents.tools.scraper import scrape_activities
+from services.activity_fetcher import fetch_activities
 
 router = APIRouter()
 
-# Store agent instances per user (in production, use proper session management)
+# Store agent instances per user (TODO: in production, use proper session management)
 agents: Dict[str, AgentOrchestrator] = {}
 
 
@@ -64,16 +34,18 @@ class PreferencesUpdate(BaseModel):
 @router.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(chat_message: ChatMessage):
     """Chat endpoint for agent interaction"""
+    print(f"[DEBUG][/chat] Chat message: {chat_message}")
     user_id = chat_message.user_id or "default"
     
-    # Get or create agent for user
     if user_id not in agents:
+        print(f"[DEBUG][/chat] Creating new agent for user: {user_id}")
         agents[user_id] = AgentOrchestrator(user_id=user_id)
     
     agent = agents[user_id]
     
     try:
         result = agent.process_message(chat_message.message)
+        print(f"[DEBUG][/chat] Result: {result}")
         return ChatResponse(
             response=result["response"],
             tool_results=result.get("tool_results", [])

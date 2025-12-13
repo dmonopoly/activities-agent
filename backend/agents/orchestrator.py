@@ -5,64 +5,18 @@ import sys
 
 from typing import List, Dict, Any
 from openai import OpenAI
-from pathlib import Path
-from dotenv import load_dotenv
+from openai.types.chat import ChatCompletion
 
-# Load environment variables from .env file
-# This ensures env vars are available when this module is imported
-env_path = Path(__file__).parent.parent / ".env"
-load_dotenv(dotenv_path=env_path)
+from agents.tools.google_maps import search_places_for_dates, TOOL_DEFINITION as GOOGLE_MAPS_TOOL
+from agents.tools.weather import get_weather_for_location, TOOL_DEFINITION as WEATHER_TOOL
+from agents.tools.scraper import scrape_activities, TOOL_DEFINITION as SCRAPER_TOOL
+from agents.tools.sheets import save_to_sheets, TOOL_DEFINITION as SHEETS_TOOL
+from agents.tools.preferences import (
+    get_user_preferences,
+    update_user_preferences,
+    TOOL_DEFINITIONS as PREFERENCES_TOOLS
+)
 
-# Add backend directory to path for imports
-backend_dir = Path(__file__).parent.parent
-if str(backend_dir) not in sys.path:
-    sys.path.insert(0, str(backend_dir))
-
-# Import tools
-try:
-    from agents.tools.scraper import scrape_activities, TOOL_DEFINITION as SCRAPER_TOOL
-    from agents.tools.sheets import save_to_sheets, TOOL_DEFINITION as SHEETS_TOOL
-    from agents.tools.preferences import (
-        get_user_preferences,
-        update_user_preferences,
-        TOOL_DEFINITIONS as PREFERENCES_TOOLS
-    )
-    from agents.tools.google_maps import search_places_for_dates, TOOL_DEFINITION as GOOGLE_MAPS_TOOL
-    from agents.tools.weather import get_weather_for_location, TOOL_DEFINITION as WEATHER_TOOL
-except ImportError as e:
-    # Fallback for when running from different directory
-    import importlib.util
-    scraper_path = Path(__file__).parent / "tools" / "scraper.py"
-    sheets_path = Path(__file__).parent / "tools" / "sheets.py"
-    prefs_path = Path(__file__).parent / "tools" / "preferences.py"
-    google_maps_path = Path(__file__).parent / "tools" / "google_maps.py"
-    weather_path = Path(__file__).parent / "tools" / "weather.py"
-    
-    def load_module(path):
-        spec = importlib.util.spec_from_file_location(path.stem, path)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        return module
-    
-    scraper_module = load_module(scraper_path)
-    sheets_module = load_module(sheets_path)
-    prefs_module = load_module(prefs_path)
-    google_maps_module = load_module(google_maps_path)
-    weather_module = load_module(weather_path)
-    
-    scrape_activities = scraper_module.scrape_activities
-    SCRAPER_TOOL = scraper_module.TOOL_DEFINITION
-    save_to_sheets = sheets_module.save_to_sheets
-    SHEETS_TOOL = sheets_module.TOOL_DEFINITION
-    get_user_preferences = prefs_module.get_user_preferences
-    update_user_preferences = prefs_module.update_user_preferences
-    PREFERENCES_TOOLS = prefs_module.TOOL_DEFINITIONS
-    search_places_for_dates = google_maps_module.search_places_for_dates
-    GOOGLE_MAPS_TOOL = google_maps_module.TOOL_DEFINITION
-    get_weather_for_location = weather_module.get_weather_for_location
-    WEATHER_TOOL = weather_module.TOOL_DEFINITION
-
-# Initialize OpenAI client (works with OpenRouter)
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
@@ -74,7 +28,6 @@ client = OpenAI(
     base_url=OPENROUTER_BASE_URL
 )
 
-# Register all tools
 ALL_TOOLS = [
     SCRAPER_TOOL,
     SHEETS_TOOL,
@@ -93,7 +46,6 @@ TOOL_FUNCTIONS = {
     "get_weather_for_location": get_weather_for_location,
 }
 
-# System prompt
 SYSTEM_PROMPT = """You are a helpful assistant that discovers fun activities and date ideas personalized to each user's preferences.
 
 Your capabilities:
@@ -159,24 +111,25 @@ class AgentOrchestrator:
             Dictionary with response and any tool results
         """
         self.conversation_history.append({"role": "user", "content": message})
-        
+        print(f"[DEBUG][process_message] Conversation history length incremented to {len(self.conversation_history)}")
+
         max_iterations = 5
         iteration = 0
         all_tool_results = []  # Accumulate tool results across all iterations
         
         while iteration < max_iterations:
-            print('-- iteration', iteration)
-            print('conversation history', self.conversation_history)
+            print('DEBUG][process_message] Iteration', iteration)
+            print('DEBUG][process_message] Conversation history', self.conversation_history)
             iteration += 1
             
-            response = client.chat.completions.create(
+            response: ChatCompletion = client.chat.completions.create(
                 model=model,
                 messages=self.conversation_history,
                 tools=ALL_TOOLS,
                 tool_choice="auto"
             )
 
-            print('response', response)
+            print('DEBUG][process_message] response', response)
             message_response = response.choices[0].message
             
             assistant_message = {
@@ -211,10 +164,10 @@ class AgentOrchestrator:
                 except:
                     arguments = {}
                 
-                print(f'executing tool {tool_name} with args {arguments}')
+                print(f'DEBUG][process_message] Executing tool {tool_name} with args {arguments}')
                 result = self._execute_tool(tool_name, arguments)
 
-                print('got tool result', result)
+                print('DEBUG][process_message] Got tool result', result)
                 tool_result_entry = {
                     "tool": tool_name,
                     "result": result
