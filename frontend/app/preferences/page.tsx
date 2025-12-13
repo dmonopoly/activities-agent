@@ -134,16 +134,30 @@ export default function PreferencesPage() {
               </label>
               <div className="flex gap-2 mb-2">
                 <input
+                  id="interest-input"
                   type="text"
                   placeholder="Add an interest (e.g., outdoor, art, music)"
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
-                  onKeyPress={(e) => {
+                  onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       handleInterestAdd(e.currentTarget.value);
                       e.currentTarget.value = '';
                     }
                   }}
                 />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const input = document.getElementById('interest-input') as HTMLInputElement;
+                    if (input && input.value) {
+                      handleInterestAdd(input.value);
+                      input.value = '';
+                    }
+                  }}
+                  className="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
+                >
+                  Add
+                </button>
               </div>
               <div className="flex flex-wrap gap-2 mt-2">
                 {(preferences.interests || []).map((interest) => (

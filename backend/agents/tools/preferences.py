@@ -10,7 +10,7 @@ backend_dir = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(backend_dir))
 
 # Simple file-based storage (can be upgraded to DB later)
-PREFERENCES_FILE = "user_preferences.json"
+PREFERENCES_FILE = backend_dir / "user_preferences.json"
 
 
 def _load_preferences() -> Dict[str, Dict[str, Any]]:

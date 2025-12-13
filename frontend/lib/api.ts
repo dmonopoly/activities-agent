@@ -31,16 +31,21 @@ export interface UserPreferences {
   user_id: string;
   location?: string;
   interests?: string[];
-  budget?: string;
+  budget_min?: number;
+  budget_max?: number;
   date_preferences?: string;
 }
 
 export const api = {
-  async chat(message: string, user_id: string = 'default', conversation_id?: string): Promise<ChatResponse> {
+  async chat(
+    message: string,
+    user_id: string = "default",
+    conversation_id?: string
+  ): Promise<ChatResponse> {
     const response = await fetch(`${API_BASE_URL}/chat`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         message,
@@ -65,11 +70,16 @@ export const api = {
     return data.preferences || data;
   },
 
-  async updatePreferences(user_id: string, preferences: Partial<UserPreferences>): Promise<UserPreferences> {
+  async updatePreferences(
+    user_id: string,
+    preferences: Partial<UserPreferences>
+  ): Promise<UserPreferences> {
+    console.log("Updating preferences:", preferences);
+
     const response = await fetch(`${API_BASE_URL}/preferences/${user_id}`, {
-      method: 'PUT',
+      method: "PUT",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(preferences),
     });
@@ -82,13 +92,19 @@ export const api = {
     return data.preferences || data;
   },
 
-  async getActivities(query?: string, location?: string, user_id?: string): Promise<Activity[]> {
+  async getActivities(
+    query?: string,
+    location?: string,
+    user_id?: string
+  ): Promise<Activity[]> {
     const params = new URLSearchParams();
-    if (query) params.append('query', query);
-    if (location) params.append('location', location);
-    if (user_id) params.append('user_id', user_id);
+    if (query) params.append("query", query);
+    if (location) params.append("location", location);
+    if (user_id) params.append("user_id", user_id);
 
-    const response = await fetch(`${API_BASE_URL}/activities?${params.toString()}`);
+    const response = await fetch(
+      `${API_BASE_URL}/activities?${params.toString()}`
+    );
     if (!response.ok) {
       throw new Error(`Activities API error: ${response.statusText}`);
     }
