@@ -26,7 +26,6 @@ client = OpenAI(
     base_url=OPENROUTER_BASE_URL
 )
 
-# Register all tools
 ALL_TOOLS = [
     SCRAPER_TOOL,
     SHEETS_TOOL,
@@ -41,7 +40,6 @@ TOOL_FUNCTIONS = {
     "update_user_preferences": update_user_preferences,
 }
 
-# System prompt
 SYSTEM_PROMPT = """You are a helpful assistant that discovers fun activities and date ideas personalized to each user's preferences.
 
 Your capabilities:

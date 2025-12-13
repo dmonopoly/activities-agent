@@ -4,7 +4,7 @@ import json
 import os
 from pathlib import Path
 
-# Simple file-based storage (can be upgraded to DB later)
+# Simple file-based storage (TODO: upgrade to DB later)
 # Store preferences file in backend directory
 backend_dir = Path(__file__).parent.parent.parent
 PREFERENCES_FILE = backend_dir / "user_preferences.json"
