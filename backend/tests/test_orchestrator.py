@@ -2,16 +2,8 @@
 import os
 import json
 import pytest
-from pathlib import Path
-import sys
 
-# Add backend directory to path for imports
-# Note: This is acceptable for tests as they may be run from different directories
-# In production code, we use relative imports instead
-backend_dir = Path(__file__).parent.parent
-if str(backend_dir) not in sys.path:
-    sys.path.insert(0, str(backend_dir))
-
+# Setup code (env loading, sys.path) is in conftest.py and runs automatically
 from agents.orchestrator import AgentOrchestrator
 from agents.tools.preferences import get_user_preferences, PREFERENCES_FILE
 

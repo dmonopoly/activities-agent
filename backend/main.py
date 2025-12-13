@@ -1,11 +1,15 @@
 """Main FastAPI application"""
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables FIRST, before any other imports
+# This ensures env vars are available when modules are imported
+env_path = Path(__file__).parent / ".env"
+load_dotenv(dotenv_path=env_path)
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.routes import router
-from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
 
 app = FastAPI(title="Activities Agent API", version="1.0.0")
 

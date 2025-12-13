@@ -6,16 +6,7 @@ import sys
 from typing import List, Dict, Any
 from openai import OpenAI
 from openai.types.chat import ChatCompletion
-from pathlib import Path
-from dotenv import load_dotenv
 
-# Load environment variables from .env file
-# This ensures env vars are available when this module is imported
-env_path = Path(__file__).parent.parent / ".env"
-load_dotenv(dotenv_path=env_path)
-
-# Import tools - absolute imports work because backend/ is in sys.path
-# (Python adds current directory when running main.py from backend/)
 from agents.tools.scraper import scrape_activities, TOOL_DEFINITION as SCRAPER_TOOL
 from agents.tools.sheets import save_to_sheets, TOOL_DEFINITION as SHEETS_TOOL
 from agents.tools.preferences import (
@@ -24,7 +15,6 @@ from agents.tools.preferences import (
     TOOL_DEFINITIONS as PREFERENCES_TOOLS
 )
 
-# Initialize OpenAI client (works with OpenRouter)
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 

@@ -3,8 +3,6 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 
-# Absolute imports work because main.py runs from backend/ directory
-# Python automatically adds the current directory to sys.path
 from agents.orchestrator import AgentOrchestrator
 from agents.tools.preferences import get_user_preferences, update_user_preferences
 from agents.tools.scraper import scrape_activities
