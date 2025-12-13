@@ -3,12 +3,6 @@ from typing import List, Dict, Any, Optional
 import requests
 from bs4 import BeautifulSoup
 import re
-import sys
-from pathlib import Path
-
-# Add backend directory to path for imports
-backend_dir = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(backend_dir))
 
 
 def scrape_activities(query: str, location: Optional[str] = None, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:

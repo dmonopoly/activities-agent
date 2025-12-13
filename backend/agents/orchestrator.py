@@ -14,44 +14,15 @@ from dotenv import load_dotenv
 env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
-# Add backend directory to path for imports
-backend_dir = Path(__file__).parent.parent
-if str(backend_dir) not in sys.path:
-    sys.path.insert(0, str(backend_dir))
-
-# Import tools
-try:
-    from agents.tools.scraper import scrape_activities, TOOL_DEFINITION as SCRAPER_TOOL
-    from agents.tools.sheets import save_to_sheets, TOOL_DEFINITION as SHEETS_TOOL
-    from agents.tools.preferences import (
-        get_user_preferences,
-        update_user_preferences,
-        TOOL_DEFINITIONS as PREFERENCES_TOOLS
-    )
-except ImportError as e:
-    # Fallback for when running from different directory
-    import importlib.util
-    scraper_path = Path(__file__).parent / "tools" / "scraper.py"
-    sheets_path = Path(__file__).parent / "tools" / "sheets.py"
-    prefs_path = Path(__file__).parent / "tools" / "preferences.py"
-    
-    def load_module(path):
-        spec = importlib.util.spec_from_file_location(path.stem, path)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        return module
-    
-    scraper_module = load_module(scraper_path)
-    sheets_module = load_module(sheets_path)
-    prefs_module = load_module(prefs_path)
-    
-    scrape_activities = scraper_module.scrape_activities
-    SCRAPER_TOOL = scraper_module.TOOL_DEFINITION
-    save_to_sheets = sheets_module.save_to_sheets
-    SHEETS_TOOL = sheets_module.TOOL_DEFINITION
-    get_user_preferences = prefs_module.get_user_preferences
-    update_user_preferences = prefs_module.update_user_preferences
-    PREFERENCES_TOOLS = prefs_module.TOOL_DEFINITIONS
+# Import tools - absolute imports work because backend/ is in sys.path
+# (Python adds current directory when running main.py from backend/)
+from agents.tools.scraper import scrape_activities, TOOL_DEFINITION as SCRAPER_TOOL
+from agents.tools.sheets import save_to_sheets, TOOL_DEFINITION as SHEETS_TOOL
+from agents.tools.preferences import (
+    get_user_preferences,
+    update_user_preferences,
+    TOOL_DEFINITIONS as PREFERENCES_TOOLS
+)
 
 # Initialize OpenAI client (works with OpenRouter)
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")

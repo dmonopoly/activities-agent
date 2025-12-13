@@ -1,12 +1,6 @@
 """Google Sheets tool - MCP-style tool for saving activities to Google Sheets"""
 from typing import List, Dict, Any, Optional
 from google.oauth2.credentials import Credentials
-import sys
-from pathlib import Path
-
-# Add backend directory to path for imports
-backend_dir = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(backend_dir))
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
