@@ -2,14 +2,11 @@
 from typing import Dict, Any, Optional
 import json
 import os
-import sys
 from pathlib import Path
 
-# Add backend directory to path for imports
+# Simple file-based storage (TODO: upgrade to DB later)
+# Store preferences file in backend directory
 backend_dir = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(backend_dir))
-
-# Simple file-based storage (can be upgraded to DB later)
 PREFERENCES_FILE = backend_dir / "user_preferences.json"
 
 
