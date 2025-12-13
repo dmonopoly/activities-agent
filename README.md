@@ -57,20 +57,25 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-4. Set up environment variables:
+4. Install the package in development mode (enables proper imports):
+```bash
+pip install -e .
+```
+
+5. Set up environment variables:
 ```bash
 cp .env.example .env
 # Edit .env and add your OPENROUTER_API_KEY
 ```
 
-5. Set up Google Sheets API:
+6. Set up Google Sheets API:
    - Go to [Google Cloud Console](https://console.cloud.google.com/)
    - Create a new project or select existing
    - Enable Google Sheets API
    - Create OAuth 2.0 credentials
    - Download `credentials.json` and place it in the `backend` directory
 
-6. Run the backend:
+7. Run the backend:
 ```bash
 python main.py
 # Or: uvicorn main:app --reload

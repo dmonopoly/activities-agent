@@ -1,0 +1,26 @@
+"""Setup configuration for activities-agent backend"""
+from setuptools import setup, find_packages
+
+setup(
+    name="activities-agent",
+    version="0.1.0",
+    description="AI-powered agent system for discovering personalized activities",
+    packages=find_packages(),
+    python_requires=">=3.9",
+    install_requires=[
+        "fastapi==0.115.0",
+        "uvicorn[standard]==0.32.0",
+        "openai==1.54.0",
+        "httpx==0.27.2",
+        "google-api-python-client==2.152.0",
+        "google-auth==2.34.0",
+        "google-auth-httplib2==0.2.0",
+        "google-auth-oauthlib==1.2.1",
+        "beautifulsoup4==4.12.3",
+        "requests==2.32.3",
+        "pydantic==2.9.2",
+        "python-dotenv==1.0.1",
+        "python-multipart==0.0.9",
+    ],
+)
+

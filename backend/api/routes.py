@@ -2,41 +2,10 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
-import sys
-from pathlib import Path
 
-# Add backend directory to path
-backend_dir = Path(__file__).parent.parent
-if str(backend_dir) not in sys.path:
-    sys.path.insert(0, str(backend_dir))
-
-try:
-    from agents.orchestrator import AgentOrchestrator
-    from agents.tools.preferences import get_user_preferences, update_user_preferences
-    from agents.tools.scraper import scrape_activities
-except ImportError:
-    # Handle import errors gracefully
-    import importlib.util
-    from pathlib import Path
-    
-    def load_module(module_path, module_name):
-        spec = importlib.util.spec_from_file_location(module_name, module_path)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        return module
-    
-    orchestrator_path = backend_dir / "agents" / "orchestrator.py"
-    prefs_path = backend_dir / "agents" / "tools" / "preferences.py"
-    scraper_path = backend_dir / "agents" / "tools" / "scraper.py"
-    
-    orchestrator_module = load_module(orchestrator_path, "orchestrator")
-    prefs_module = load_module(prefs_path, "preferences")
-    scraper_module = load_module(scraper_path, "scraper")
-    
-    AgentOrchestrator = orchestrator_module.AgentOrchestrator
-    get_user_preferences = prefs_module.get_user_preferences
-    update_user_preferences = prefs_module.update_user_preferences
-    scrape_activities = scraper_module.scrape_activities
+from agents.orchestrator import AgentOrchestrator
+from agents.tools.preferences import get_user_preferences, update_user_preferences
+from agents.tools.scraper import scrape_activities
 
 router = APIRouter()
 
