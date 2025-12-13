@@ -7,9 +7,6 @@ from pathlib import Path
 # Simple file-based storage (TODO: upgrade to DB later)
 # Store preferences file in backend directory
 backend_dir = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(backend_dir))
-
-# Simple file-based storage (can be upgraded to DB later)
 DATA_DIR = backend_dir / "data"
 PREFERENCES_FILE = DATA_DIR / "user_preferences.json"
 
