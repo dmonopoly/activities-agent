@@ -118,7 +118,7 @@ The frontend will be available at `http://localhost:3000`
 
 ```
 activities-agent/
-├── frontend/              # Next.js frontend
+├── frontend/             # Next.js frontend
 │   ├── app/              # App router pages
 │   │   ├── page.tsx      # Main chat page
 │   │   ├── preferences/  # Preferences page
@@ -130,7 +130,7 @@ activities-agent/
 ├── backend/              # Python FastAPI backend
 │   ├── agents/           # Agent system
 │   │   ├── orchestrator.py  # Main agent orchestrator, acts as MCP client to call tools, stores tool list
-│   │   └── tools/        # Tool implementations, like an MCP server providing Tool interfaces.
+│   │   └── tools/        # Tool implementations, like an MCP server providing Tool interfaces
 │   ├── api/              # API routes
 │   ├── docs/             # Documentation, including Backend Architecture
 │   ├── models/           # Data models
