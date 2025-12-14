@@ -114,11 +114,11 @@ class AgentOrchestrator:
             Dictionary with response and any tool results
         """
         self.conversation_history.append({"role": "user", "content": message})
-        print(f"[ORCHESTRATOR] process_message called with message: {message[:100]}...")
+        print(f"[ORCHESTRATOR] process_message called with message: {message[:100]}")
         print(f"[ORCHESTRATOR] ENABLE_OPENAI_API={ENABLE_OPENAI_API}")
         print(f"[ORCHESTRATOR] Conversation history length: {len(self.conversation_history)}")
 
-        max_iterations = 5
+        max_iterations = 3
         iteration = 0
         all_tool_results = []  # Accumulate tool results across all iterations
         

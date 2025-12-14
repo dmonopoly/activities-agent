@@ -97,7 +97,6 @@ def _format_activity_for_sheets(activity: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-# TODO: Consolidate with google_maps.py search_places_for_dates which is similar.
 def fetch_activities(
     location_a: str,
     location_b: Optional[str],
