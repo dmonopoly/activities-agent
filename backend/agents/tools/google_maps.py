@@ -1,8 +1,12 @@
 """Google Maps Places tool - MCP-style tool for finding date activities using Google Maps"""
 import googlemaps
 import os
+import random
 
 from typing import List, Dict, Any, Optional, Tuple
+
+from agents.config import ENABLE_GOOGLE_MAPS_API
+from agents.mock_data import MOCK_TRANSIT_STOPS, MOCK_PLACES
 
 try:
     from agents.tools.weather import get_weather_for_location
@@ -112,6 +116,22 @@ def get_transit_stops_between(
             "error": str (optional)
         }
     """
+    print(f"[GMAPS] get_transit_stops_between called: location_a={location_a}, location_b={location_b}")
+    print(f"[GMAPS] ENABLE_GOOGLE_MAPS_API={ENABLE_GOOGLE_MAPS_API}")
+    
+    if not ENABLE_GOOGLE_MAPS_API:
+        num_stops = random.randint(3, 6)
+        mock_stops = random.sample(MOCK_TRANSIT_STOPS, min(num_stops, len(MOCK_TRANSIT_STOPS)))
+        print(f"[GMAPS] ❌ API DISABLED - returning MOCK transit stops")
+        print(f"[GMAPS] Mock response: {len(mock_stops)} stops - {[s['name'] for s in mock_stops]}")
+        return {
+            "stops": mock_stops,
+            "location_a": location_a,
+            "location_b": location_b,
+            "stop_count": len(mock_stops)
+        }
+    
+    print(f"[GMAPS] ✅ API ENABLED - calling Google Maps Directions API")
     api_key = os.getenv("GOOGLE_MAPS_API_KEY")
     
     if not api_key:
@@ -223,6 +243,24 @@ def search_places_near_location(
     Returns:
         Dictionary with list of activities and metadata
     """
+    print(f"[GMAPS] search_places_near_location called: location={location}, place_types={place_types}, radius={radius}mi")
+    print(f"[GMAPS] ENABLE_GOOGLE_MAPS_API={ENABLE_GOOGLE_MAPS_API}")
+    
+    if not ENABLE_GOOGLE_MAPS_API:
+        num_places = random.randint(3, 6)
+        mock_activities = [p.copy() for p in random.sample(MOCK_PLACES, min(num_places, len(MOCK_PLACES)))]
+        # Add near_stop field to match expected format
+        for activity in mock_activities:
+            activity["near_stop"] = location
+        print(f"[GMAPS] ❌ API DISABLED - returning MOCK places")
+        print(f"[GMAPS] Mock response: {len(mock_activities)} places - {[a['name'] for a in mock_activities]}")
+        return {
+            "activities": mock_activities,
+            "search_location": location,
+            "count": len(mock_activities)
+        }
+    
+    print(f"[GMAPS] ✅ API ENABLED - calling Google Maps Places API")
     api_key = os.getenv("GOOGLE_MAPS_API_KEY")
     
     if not api_key:
@@ -374,6 +412,25 @@ def search_places_for_dates(
     Returns:
         Dictionary with list of activities and metadata
     """
+    print(f"[GMAPS] search_places_for_dates called: location1={location1}, location2={location2}")
+    print(f"[GMAPS] Parameters: place_types={place_types}, radius={radius}mi, check_weather={check_weather}")
+    print(f"[GMAPS] ENABLE_GOOGLE_MAPS_API={ENABLE_GOOGLE_MAPS_API}")
+    
+    if not ENABLE_GOOGLE_MAPS_API:
+        num_places = random.randint(4, 8)
+        mock_activities = [p.copy() for p in random.sample(MOCK_PLACES, min(num_places, len(MOCK_PLACES)))]
+        mock_midpoint = {"lat": 37.7749, "lng": -122.4194}  # SF center
+        print(f"[GMAPS] ❌ API DISABLED - returning MOCK date places")
+        print(f"[GMAPS] Mock response: {len(mock_activities)} places - {[a['name'] for a in mock_activities]}")
+        return {
+            "activities": mock_activities,
+            "midpoint": mock_midpoint,
+            "location1": location1,
+            "location2": location2,
+            "count": len(mock_activities)
+        }
+    
+    print(f"[GMAPS] ✅ API ENABLED - calling Google Maps Places API for date spots")
     api_key = os.getenv("GOOGLE_MAPS_API_KEY")
     
     if not api_key:
