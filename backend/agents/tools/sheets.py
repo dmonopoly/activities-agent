@@ -71,16 +71,17 @@ def save_to_sheets(activities: List[Dict[str, Any]], spreadsheet_id: Optional[st
         
         # Prepare data
         values = [
-            ['Name', 'Location', 'Description', 'Price', 'Date', 'Category', 'URL']
+            ['Name', 'Location', 'Description', 'Price', 'Opening Hours', 'Category', 'URL']
         ]
         
         for activity in activities:
+            opening_hours = activity.get('opening_hours', '')
             values.append([
                 activity.get('name', ''),
                 activity.get('location', ''),
                 activity.get('description', ''),
                 activity.get('price', ''),
-                activity.get('date', ''),
+                opening_hours,
                 activity.get('category', ''),
                 activity.get('url', '')
             ])
@@ -139,7 +140,7 @@ TOOL_DEFINITION = {
                             "location": {"type": "string"},
                             "description": {"type": "string"},
                             "price": {"type": "string"},
-                            "date": {"type": "string"},
+                            "opening_hours": {"type": "string", "description": "Opening hours or event time"},
                             "category": {"type": "string"},
                             "url": {"type": "string"}
                         }

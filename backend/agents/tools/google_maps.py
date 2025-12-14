@@ -221,29 +221,38 @@ def get_transit_stops_between(
         }
 
 
-def search_places_near_location(
-    location: str,
+def search_places_for_dates(
+    location1: str,
+    location2: Optional[str] = None,
     place_types: Optional[List[str]] = None,
     price_level: Optional[int] = None,
     min_rating: float = 4.0,
-    radius: float = 1.0,
+    radius: float = 0.5,
+    check_weather: bool = False,
     user_interests: Optional[List[str]] = None
 ) -> Dict[str, Any]:
     """
-    Search for places near a single location using Google Maps Places API.
+    Search for date activities near one location or between two locations.
+    
+    Intelligently chooses search strategy:
+    - For two locations: tries transit stops first (great for cities like NYC, SF, Chicago),
+      falls back to midpoint if no transit available (car-centric areas)
+    - For one location: searches near that location
     
     Args:
-        location: Location (address or coordinates as "lat,lng")
-        place_types: List of place types (e.g., ["cafe", "restaurant", "park"])
-        price_level: Price level filter (0-4)
-        min_rating: Minimum rating threshold (default: 4.0)
-        radius: Search radius in miles (default: 1.0)
-        user_interests: List of interests for review matching
+        location1: First location (address or coordinates as "lat,lng")
+        location2: Second location (optional - if not provided, searches near location1)
+        place_types: List of place types (e.g., ["cafe", "restaurant", "park", "tourist_attraction"])
+        price_level: Max price level filter (0-4, where 0=Free, 1=Inexpensive, 2=Moderate, 3=Expensive, 4=Very Expensive)
+        min_rating: Minimum rating threshold (default: 4.0, scale: 1.0-5.0)
+        radius: Search radius in miles per search point (default: 0.5mi for transit stops, auto-expanded for midpoint)
+        check_weather: Boolean to include weather info for outdoor activities
+        user_interests: List of interests for review matching (e.g., ["outdoor", "art", "coffee"])
         
     Returns:
-        Dictionary with list of activities and metadata
+        Dictionary with list of activities and metadata including search_mode used
     """
-    print(f"[GMAPS] search_places_near_location called: location={location}, place_types={place_types}, radius={radius}mi")
+    print(f"[GMAPS] search_places_for_dates called: location={location}, place_types={place_types}, radius={radius}mi")
     print(f"[GMAPS] ENABLE_GOOGLE_MAPS_API={ENABLE_GOOGLE_MAPS_API}")
     
     if not ENABLE_GOOGLE_MAPS_API:
@@ -272,301 +281,186 @@ def search_places_near_location(
     try:
         gmaps = googlemaps.Client(key=api_key)
         
-        # Geocode location if it's an address
-        if "," in location and all(c.isdigit() or c in ".-," for c in location.replace(" ", "")):
-            # Already coordinates
-            parts = location.split(",")
-            search_lat, search_lng = float(parts[0]), float(parts[1])
-            formatted_location = location
+        # Default place types if not provided
+        if not place_types:
+            place_types = ["cafe", "restaurant", "park", "tourist_attraction"]
+        
+        # Determine search points based on locations provided
+        search_points = []
+        search_mode = "single_location"
+        
+        if location2:
+            # Two locations: try transit-aware search first, fallback to midpoint
+            transit_result = get_transit_stops_between(location1, location2)
+            
+            if transit_result.get("stops") and len(transit_result["stops"]) >= 2:
+                # Transit available - use stops along the route
+                search_mode = "transit_stops"
+                search_points = [
+                    {
+                        "name": stop["name"],
+                        "lat": stop["lat"],
+                        "lng": stop["lng"],
+                        "type": stop.get("type", "TRANSIT")
+                    }
+                    for stop in transit_result["stops"]
+                ]
+                effective_radius = radius  # Use smaller radius per stop. TODO: Do only 1 search for stops near each other.
+            else:
+                # No transit - fallback to midpoint (car-centric area)
+                search_mode = "midpoint"
+                loc1_data = _geocode_location(gmaps, location1)
+                loc2_data = _geocode_location(gmaps, location2)
+                
+                if not loc1_data or not loc2_data:
+                    return {
+                        "error": f"Could not geocode locations. Location1: {location1}, Location2: {location2}",
+                        "activities": []
+                    }
+                
+                midpoint_lat, midpoint_lng = _calculate_midpoint(
+                    loc1_data["lat"], loc1_data["lng"],
+                    loc2_data["lat"], loc2_data["lng"]
+                )
+                search_points = [{
+                    "name": "Midpoint",
+                    "lat": midpoint_lat,
+                    "lng": midpoint_lng,
+                    "type": "midpoint"
+                }]
+                # Use larger radius for midpoint since it's a single search point
+                effective_radius = max(radius * 4, 2.0)
         else:
-            loc_data = _geocode_location(gmaps, location)
+            # Single location search
+            loc_data = _geocode_location(gmaps, location1)
             if not loc_data:
                 return {
-                    "error": f"Could not geocode location: {location}",
+                    "error": f"Could not geocode location: {location1}",
                     "activities": []
                 }
-            search_lat = loc_data["lat"]
-            search_lng = loc_data["lng"]
-            formatted_location = loc_data["formatted_address"]
+            search_points = [{
+                "name": loc_data["formatted_address"],
+                "lat": loc_data["lat"],
+                "lng": loc_data["lng"],
+                "type": "origin"
+            }]
+            effective_radius = radius
         
-        # Default place types if not provided
-        if not place_types:
-            place_types = ["cafe", "restaurant", "park", "tourist_attraction"]
-        
+        # Search for activities near each search point
         activities = []
+        seen_place_ids = set()
         
-        # Search for each place type
-        for place_type in place_types:
-            places_result = gmaps.places_nearby(
-                location=(search_lat, search_lng),
-                radius=int(radius * NUM_METERS_PER_MILE),
-                type=place_type
-            )
+        for search_point in search_points:
+            search_lat = search_point["lat"]
+            search_lng = search_point["lng"]
             
-            # Fallback to text search
-            if not places_result.get("results"):
-                text_search = gmaps.places(
-                    query=place_type,
+            for place_type in place_types:
+                places_result = gmaps.places_nearby(
                     location=(search_lat, search_lng),
-                    radius=int(radius * NUM_METERS_PER_MILE)
+                    radius=int(effective_radius * NUM_METERS_PER_MILE),
+                    type=place_type
                 )
-                if text_search.get("results"):
-                    places_result = text_search
-            
-            # Process each place
-            for place in places_result.get("results", [])[:5]:  # Limit to 5 per type per location
-                place_id = place.get("place_id")
-                rating = place.get("rating")
-                price_level_place = place.get("price_level")
                 
-                if rating and rating < min_rating:
-                    continue
-                
-                if price_level is not None and price_level_place is not None:
-                    if price_level_place > price_level:
-                        continue
-                
-                try:
-                    place_details = gmaps.place(
-                        place_id=place_id,
-                        fields=["name", "formatted_address", "rating", "price_level",
-                               "opening_hours", "reviews", "geometry", "url", "types"]
+                # Fallback to text search if no results
+                if not places_result.get("results"):
+                    text_search = gmaps.places(
+                        query=place_type,
+                        location=(search_lat, search_lng),
+                        radius=int(effective_radius * NUM_METERS_PER_MILE)
                     )
+                    if text_search.get("results"):
+                        places_result = text_search
+                
+                # Limit per type per location (more for midpoint since it's single point)
+                limit = 10 if search_mode == "midpoint" else 5
+                
+                for place in places_result.get("results", [])[:limit]:
+                    place_id = place.get("place_id")
                     
-                    details = place_details.get("result", {})
-                    reviews = details.get("reviews", [])
-                    review_analysis = _analyze_reviews(reviews, user_interests)
+                    # Deduplicate across search points
+                    if place_id in seen_place_ids:
+                        continue
+                    seen_place_ids.add(place_id)
                     
-                    opening_hours = details.get("opening_hours", {})
-                    hours_text = None
-                    if opening_hours:
-                        periods = opening_hours.get("weekday_text", [])
-                        if periods:
-                            hours_text = "; ".join(periods)
+                    rating = place.get("rating")
+                    price_level_place = place.get("price_level")
                     
-                    geometry = details.get("geometry", {})
-                    location_coords = geometry.get("location", {})
+                    if rating and rating < min_rating:
+                        continue
                     
-                    activity = {
-                        "name": details.get("name", place.get("name", "Unknown")),
-                        "location": details.get("formatted_address", place.get("vicinity", "Unknown")),
-                        "description": review_analysis.get("summary", ""),
-                        "price": f"${'$' * (price_level_place or 0)}" if price_level_place is not None else None,
-                        "date": hours_text,  # Using opening hours as "date" for sheets compatibility
-                        "url": details.get("url"),
-                        "category": place_type.replace("_", " ").title(),
-                        "gmaps_place_id": place_id,
-                        "gmaps_rating": rating,
-                        "gmaps_price_level": price_level_place,
-                        "near_stop": location,
-                        "coordinates": {
-                            "lat": location_coords.get("lat"),
-                            "lng": location_coords.get("lng")
-                        } if location_coords else None
-                    }
+                    # Filter by max price level (not exact match)
+                    if price_level is not None and price_level_place is not None:
+                        if price_level_place > price_level:
+                            continue
                     
-                    activities.append(activity)
-                    
-                except Exception as e:
-                    print(f"Error getting details for place {place_id}: {e}")
-                    continue
+                    try:
+                        place_details = gmaps.place(
+                            place_id=place_id,
+                            fields=["name", "formatted_address", "rating", "price_level", 
+                                   "opening_hours", "reviews", "geometry", "url", "types"]
+                        )
+                        
+                        details = place_details.get("result", {})
+                        reviews = details.get("reviews", [])
+                        review_analysis = _analyze_reviews(reviews, user_interests)
+                        
+                        opening_hours = details.get("opening_hours", {})
+                        hours_text = None
+                        if opening_hours:
+                            periods = opening_hours.get("weekday_text", [])
+                            if periods:
+                                hours_text = "; ".join(periods)
+                        
+                        geometry = details.get("geometry", {})
+                        location_coords = geometry.get("location", {})
+                        
+                        activity = {
+                            "name": details.get("name", place.get("name", "Unknown")),
+                            "location": details.get("formatted_address", place.get("vicinity", "Unknown")),
+                            "description": review_analysis.get("summary", ""),
+                            "price": f"${'$' * (price_level_place or 0)}" if price_level_place is not None else None,
+                            "opening_hours": hours_text,
+                            "url": details.get("url"),
+                            "category": place_type.replace("_", " ").title(),
+                            "gmaps_place_id": place_id,
+                            "gmaps_rating": rating,
+                            "gmaps_price_level": price_level_place,
+                            "near_stop": search_point["name"],
+                            "coordinates": {
+                                "lat": location_coords.get("lat"),
+                                "lng": location_coords.get("lng")
+                            } if location_coords else None
+                        }
+                        
+                        # Add weather info if requested (useful for outdoor activities)
+                        if check_weather and get_weather_for_location:
+                            coords = activity.get("coordinates")
+                            if coords:
+                                weather_location = f"{coords['lat']},{coords['lng']}"
+                                weather_info = get_weather_for_location(weather_location)
+                                if "error" not in weather_info:
+                                    activity["weather_info"] = weather_info
+                        
+                        activities.append(activity)
+                        
+                    except Exception as e:
+                        print(f"Error getting details for place {place_id}: {e}")
+                        continue
         
         activities.sort(key=lambda x: x.get("gmaps_rating", 0) or 0, reverse=True)
         
-        return {
+        result = {
             "activities": activities,
-            "search_location": formatted_location,
-            "count": len(activities)
-        }
-        
-    except Exception as e:
-        return {
-            "error": f"Error searching places: {str(e)}",
-            "activities": []
-        }
-
-
-def search_places_for_dates(
-    location1: str,
-    location2: str,
-    place_types: Optional[List[str]] = None,
-    price_level: Optional[int] = None,
-    min_rating: float = 4.0,
-    radius: float = 10.0,
-    check_weather: bool = False,
-    user_interests: Optional[List[str]] = None
-) -> Dict[str, Any]:
-    """
-    Search for date activities between two locations using Google Maps Places API
-    
-    Args:
-        location1: First location (address or coordinates as "lat,lng")
-        location2: Second location (address or coordinates as "lat,lng")
-        place_types: List of place types (e.g., ["cafe", "restaurant", "park", "tourist_attraction"])
-        price_level: Price level filter (0-4, where 0=Free, 1=Inexpensive, 2=Moderate, 3=Expensive, 4=Very Expensive)
-        min_rating: Minimum rating threshold (default: 4.0, scale: 1.0-5.0)
-        radius: Max distance from midpoint in miles (default: 10mi)
-        check_weather: Boolean to include weather info
-        user_interests: List of interests for review matching
-        
-    Returns:
-        Dictionary with list of activities and metadata
-    """
-    print(f"[GMAPS] search_places_for_dates called: location1={location1}, location2={location2}")
-    print(f"[GMAPS] Parameters: place_types={place_types}, radius={radius}mi, check_weather={check_weather}")
-    print(f"[GMAPS] ENABLE_GOOGLE_MAPS_API={ENABLE_GOOGLE_MAPS_API}")
-    
-    if not ENABLE_GOOGLE_MAPS_API:
-        num_places = random.randint(4, 8)
-        mock_activities = [p.copy() for p in random.sample(MOCK_PLACES, min(num_places, len(MOCK_PLACES)))]
-        mock_midpoint = {"lat": 37.7749, "lng": -122.4194}  # SF center
-        print(f"[GMAPS] ❌ API DISABLED - returning MOCK date places")
-        print(f"[GMAPS] Mock response: {len(mock_activities)} places - {[a['name'] for a in mock_activities]}")
-        return {
-            "activities": mock_activities,
-            "midpoint": mock_midpoint,
+            "search_mode": search_mode,
+            "search_points": [{"name": sp["name"], "type": sp["type"]} for sp in search_points],
             "location1": location1,
-            "location2": location2,
-            "count": len(mock_activities)
-        }
-    
-    print(f"[GMAPS] ✅ API ENABLED - calling Google Maps Places API for date spots")
-    api_key = os.getenv("GOOGLE_MAPS_API_KEY")
-    
-    if not api_key:
-        return {
-            "error": "GOOGLE_MAPS_API_KEY not set. Please set it in your .env file.",
-            "activities": []
-        }
-    
-    try:
-        gmaps = googlemaps.Client(key=api_key)
-        
-        # Geocode both locations
-        loc1_data = _geocode_location(gmaps, location1)
-        loc2_data = _geocode_location(gmaps, location2)
-        
-        if not loc1_data or not loc2_data:
-            return {
-                "error": f"Could not geocode one or both locations. Location1: {location1}, Location2: {location2}",
-                "activities": []
-            }
-        
-        # Calculate midpoint
-        midpoint_lat, midpoint_lng = _calculate_midpoint(
-            loc1_data["lat"], loc1_data["lng"],
-            loc2_data["lat"], loc2_data["lng"]
-        )
-        
-        # Default place types if not provided
-        if not place_types:
-            place_types = ["cafe", "restaurant", "park", "tourist_attraction"]
-        
-        activities = []
-        
-        # Search for each place type
-        for place_type in place_types:
-            # Build search query
-            query = place_type
-            
-            # Use Places API Text Search
-            places_result = gmaps.places_nearby(
-                location=(midpoint_lat, midpoint_lng),
-                radius=int(radius * NUM_METERS_PER_MILE),
-                type=place_type
-            )
-            
-            # Also try text search as fallback
-            if not places_result.get("results"):
-                text_search = gmaps.places(
-                    query=query,
-                    location=(midpoint_lat, midpoint_lng),
-                    radius=int(radius * NUM_METERS_PER_MILE)
-                )
-                if text_search.get("results"):
-                    places_result = text_search
-            
-            # Process each place
-            for place in places_result.get("results", [])[:10]:  # Limit to 10 per type
-                place_id = place.get("place_id")
-                rating = place.get("rating")
-                price_level_place = place.get("price_level")
-                
-                if rating and rating < min_rating:
-                    continue
-                
-                if price_level is not None and price_level_place is not None:
-                    if price_level_place != price_level:
-                        continue
-                
-                try:
-                    place_details = gmaps.place(
-                        place_id=place_id,
-                        fields=["name", "formatted_address", "rating", "price_level", 
-                               "opening_hours", "reviews", "photos", "geometry", "url", "types"]
-                    )
-                    
-                    details = place_details.get("result", {})
-                    
-                    reviews = details.get("reviews", [])
-                    review_analysis = _analyze_reviews(reviews, user_interests)
-                    
-                    opening_hours = details.get("opening_hours", {})
-                    hours_text = None
-                    if opening_hours:
-                        periods = opening_hours.get("weekday_text", [])
-                        if periods:
-                            hours_text = "\n".join(periods)
-                    
-                    geometry = details.get("geometry", {})
-                    location_coords = geometry.get("location", {})
-                    
-                    activity = {
-                        "name": details.get("name", place.get("name", "Unknown")),
-                        "location": details.get("formatted_address", place.get("vicinity", "Unknown")),
-                        "description": review_analysis.get("summary", ""),
-                        "price": f"${'$' * (price_level_place or 0)}" if price_level_place is not None else None,
-                        "date": None,  # Not applicable for places
-                        "url": details.get("url"),
-                        "image_url": None,  # Could extract from photos if needed
-                        "category": place_type.replace("_", " ").title(),
-                        "gmaps_place_id": place_id,
-                        "gmaps_rating": rating,
-                        "gmaps_price_level": price_level_place,
-                        "gmaps_opening_hours": hours_text or opening_hours,
-                        "gmaps_review_summary": review_analysis.get("summary"),
-                        "coordinates": {
-                            "lat": location_coords.get("lat"),
-                            "lng": location_coords.get("lng")
-                        } if location_coords else None
-                    }
-                    
-                    if check_weather and get_weather_for_location:
-                        coords = activity.get("coordinates")
-                        if coords:
-                            weather_location = f"{coords['lat']},{coords['lng']}"
-                            weather_info = get_weather_for_location(weather_location)
-                            if "error" not in weather_info:
-                                activity["weather_info"] = weather_info
-                    
-                    activities.append(activity)
-                    
-                except Exception as e:
-                    print(f"Error getting details for place {place_id}: {e}")
-                    continue
-        
-        activities.sort(key=lambda x: x.get("gmaps_rating", 0) or 0, reverse=True)
-        
-        return {
-            "activities": activities,
-            "midpoint": {
-                "lat": midpoint_lat,
-                "lng": midpoint_lng
-            },
-            "location1": loc1_data.get("formatted_address", location1),
-            "location2": loc2_data.get("formatted_address", location2),
             "count": len(activities)
         }
+        
+        if location2:
+            result["location2"] = location2
+        
+        return result
         
     except Exception as e:
         return {
@@ -579,17 +473,17 @@ TOOL_DEFINITION = {
     "type": "function",
     "function": {
         "name": "search_places_for_dates",
-        "description": "Search for date activities between two locations using Google Maps. Finds places like coffee shops, restaurants, parks, and attractions that are between the two locations, filtered by price, rating, and user interests.",
+        "description": "Search for date activities near one location or between two locations using Google Maps. Intelligently chooses search strategy: for transit-friendly cities (NYC, SF, Chicago), searches along transit stops; for car-centric areas, searches around midpoint. Finds places like coffee shops, restaurants, parks, and attractions.",
         "parameters": {
             "type": "object",
             "properties": {
                 "location1": {
                     "type": "string",
-                    "description": "First location (address or coordinates as 'lat,lng')"
+                    "description": "First/primary location (address or coordinates as 'lat,lng')"
                 },
                 "location2": {
                     "type": "string",
-                    "description": "Second location (address or coordinates as 'lat,lng')"
+                    "description": "Second location (optional - if provided, searches between locations; if omitted, searches near location1)"
                 },
                 "place_types": {
                     "type": "array",
@@ -598,7 +492,7 @@ TOOL_DEFINITION = {
                 },
                 "price_level": {
                     "type": "integer",
-                    "description": "Price level filter (0-4, where 0=Free, 1=Inexpensive, 2=Moderate, 3=Expensive, 4=Very Expensive)"
+                    "description": "Maximum price level filter (0-4, where 0=Free, 1=Inexpensive, 2=Moderate, 3=Expensive, 4=Very Expensive)"
                 },
                 "min_rating": {
                     "type": "number",
@@ -606,7 +500,7 @@ TOOL_DEFINITION = {
                 },
                 "radius": {
                     "type": "number",
-                    "description": "Max distance from midpoint in miles (default: 10mi)"
+                    "description": "Search radius in miles per search point (default: 0.5mi, auto-expanded for car-centric areas)"
                 },
                 "check_weather": {
                     "type": "boolean",
@@ -618,7 +512,7 @@ TOOL_DEFINITION = {
                     "description": "List of user interests for matching against reviews (e.g., ['outdoor', 'art', 'coffee'])"
                 }
             },
-            "required": ["location1", "location2"]
+            "required": ["location1"]
         }
     }
 }

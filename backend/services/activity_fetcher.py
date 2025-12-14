@@ -1,4 +1,4 @@
-"""Activity Fetcher Service: Intelligently fetches activities between locations"""
+"""Activity Fetcher Service: Fetches activities using shared google_maps tool with user preferences"""
 from typing import Dict, Any, Optional, List
 import sys
 from pathlib import Path
@@ -7,14 +7,11 @@ from pathlib import Path
 backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
 
-from agents.tools.google_maps import (
-    get_transit_stops_between,
-    search_places_near_location
-)
+from agents.tools.google_maps import search_places_for_dates
 from agents.tools.preferences import get_user_preferences
 
 
-# Map interests to Google Maps place types (easier to cache)
+# Map interests to Google Maps place types
 INTEREST_TO_PLACE_TYPES = {
     "outdoor": ["park", "hiking_area", "campground"],
     "art": ["art_gallery", "museum"],
@@ -35,9 +32,9 @@ INTEREST_TO_PLACE_TYPES = {
 DEFAULT_PLACE_TYPES = ["cafe", "restaurant", "park", "tourist_attraction"]
 
 
-def _budget_to_price_level(budget_min: Optional[float], budget_max: Optional[float]) -> Optional[int]:
+def _budget_to_price_level(budget_max: Optional[float]) -> Optional[int]:
     """
-    Map budget range to Google Maps price level (0-4).
+    Map budget to Google Maps price level (0-4).
     
     Price levels:
     - 0: Free
@@ -90,7 +87,7 @@ def _format_activity_for_sheets(activity: Dict[str, Any]) -> Dict[str, Any]:
         "location": activity.get("location", ""),
         "description": activity.get("description", ""),
         "price": activity.get("price", ""),
-        "date": activity.get("date", ""),  # Opening hours
+        "opening_hours": activity.get("opening_hours", ""),
         "category": activity.get("category", ""),
         "url": activity.get("url", ""),
         # Additional metadata (won't break sheets but useful for UI)
@@ -109,9 +106,14 @@ def fetch_activities(
     """
     Fetch activities based on one or two locations and user preferences.
     
-    If two locations are provided, finds transit stops between them and
-    queries activities near each stop. If only one location, queries
-    activities near that location.
+    This is a thin wrapper around search_places_for_dates that:
+    1. Loads user preferences automatically
+    2. Converts preferences to search parameters
+    3. Formats results for sheets compatibility
+    
+    The underlying search_places_for_dates intelligently chooses:
+    - Transit stops approach for cities with public transit (NYC, SF, etc.)
+    - Midpoint approach for car-centric areas
     
     Args:
         location_a: First location (required)
@@ -119,91 +121,47 @@ def fetch_activities(
         user_id: User ID for fetching preferences
         
     Returns:
-        Dictionary with:
-        - activities: List of activities in sheets-compatible format
-        - query_locations: List of locations that were queried
-        - location_a: The resolved first location
-        - location_b: The second location (or None)
-        - error: Error message if any
+        Dictionary with activities and metadata
     """
     prefs = get_user_preferences(user_id)
     
     interests = prefs.get("interests", [])
-    budget_min = prefs.get("budget_min")
     budget_max = prefs.get("budget_max")
     
     # Convert preferences to Google Maps parameters
     place_types = _interests_to_place_types(interests)
-    price_level = _budget_to_price_level(budget_min, budget_max)
+    price_level = _budget_to_price_level(budget_max)
     
-    query_locations = []
+    # Use the unified search function (handles transit vs midpoint internally)
+    result = search_places_for_dates(
+        location1=location_a,
+        location2=location_b,
+        place_types=place_types,
+        price_level=price_level,
+        min_rating=4.0,
+        radius=0.5,
+        user_interests=interests
+    )
     
-    if location_b:
-        transit_result = get_transit_stops_between(location_a, location_b)
-        
-        if transit_result.get("error"):
-            query_locations = [
-                {"name": location_a, "lat": None, "lng": None},
-                {"name": location_b, "lat": None, "lng": None}
-            ]
-        else:
-            stops = transit_result.get("stops", [])
-            if stops:
-                query_locations = stops
-            else:
-                query_locations = [
-                    {"name": location_a, "lat": None, "lng": None},
-                    {"name": location_b, "lat": None, "lng": None}
-                ]
-    else:
-        query_locations = [{"name": location_a, "lat": None, "lng": None}]
-    
-    # Fetch activities near each query location
-    all_activities = []
-    seen_place_ids = set()  # Deduplicate by place ID
-    
-    for loc in query_locations:
-        # Use coordinates if available, otherwise use name
-        if loc.get("lat") and loc.get("lng"):
-            search_location = f"{loc['lat']},{loc['lng']}"
-        else:
-            search_location = loc.get("name", location_a)
-        
-        result = search_places_near_location(
-            location=search_location,
-            place_types=place_types,
-            price_level=price_level,
-            min_rating=4.0,
-            radius=0.5,  # 0.5 mile radius around each stop
-            user_interests=interests
-        )
-        
-        if result.get("error"):
-            continue
-        
-        for activity in result.get("activities", []):
-            place_id = activity.get("gmaps_place_id")
-            if place_id and place_id not in seen_place_ids:
-                seen_place_ids.add(place_id)
-                all_activities.append(activity)
-    
-    # Sort by rating
-    all_activities.sort(key=lambda x: x.get("gmaps_rating", 0) or 0, reverse=True)
+    if result.get("error"):
+        return {
+            "activities": [],
+            "error": result["error"],
+            "location_a": location_a,
+            "location_b": location_b
+        }
     
     # Format for sheets compatibility
-    formatted_activities = [_format_activity_for_sheets(a) for a in all_activities]
+    formatted_activities = [_format_activity_for_sheets(a) for a in result.get("activities", [])]
     
     return {
         "activities": formatted_activities,
-        "query_locations": [
-            {"name": loc.get("name"), "type": loc.get("type", "location")}
-            for loc in query_locations
-        ],
+        "search_mode": result.get("search_mode"),
+        "query_locations": result.get("search_points", []),
         "location_a": location_a,
         "location_b": location_b,
         "preferences_used": {
             "interests": interests,
-            "budget_min": budget_min,
             "budget_max": budget_max,
             "place_types": place_types,
             "price_level": price_level
