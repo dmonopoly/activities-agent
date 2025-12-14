@@ -1,6 +1,8 @@
-# Activities Agent
+# Overview
 
 An AI-powered agent system for discovering personalized activities and social event ideas. Built with Next.js, Python FastAPI, and OpenRouter LLM integration.
+
+The core focus initial focus is to recommend activities between two locations to help two people who live in different areas to easily meet.
 
 ## Features
 
@@ -25,6 +27,8 @@ An AI-powered agent system for discovering personalized activities and social ev
 - **Agent Orchestrator**: LLM agent with tool calling
 - **MCP-style Tools**:
   - `scrape_activities`: Web scraping for activities
+  - `search_places_for_dates`: Google Maps Places API integration for finding date activities between locations
+  - `get_weather_for_location`: Weather information for outdoor activity planning
   - `save_to_sheets`: Google Sheets integration
   - `get_user_preferences`: Retrieve user preferences
   - `update_user_preferences`: Update user preferences
@@ -70,7 +74,17 @@ cp .env.example .env
    - Create OAuth 2.0 credentials
    - Download `credentials.json` and place it in the `backend` directory
 
-6. Run the backend:
+6. (Optional) Set up Google Maps Places API:
+   - In the same Google Cloud project, enable Places API and Geocoding API
+   - Create an API key (or use the same one if you already have one)
+   - Add `GOOGLE_MAPS_API_KEY` to your `.env` file
+
+7. (Optional) Set up OpenWeatherMap API:
+   - Sign up at [OpenWeatherMap](https://openweathermap.org/api)
+   - Get your free API key
+   - Add `OPENWEATHER_API_KEY` to your `.env` file
+
+8. Run the backend:
 ```bash
 python main.py
 # Or: uvicorn main:app --reload
@@ -209,6 +223,8 @@ pytest tests/ -v -s
 
 ### Backend (.env)
 - `OPENROUTER_API_KEY`: Your OpenRouter API key
+- `GOOGLE_MAPS_API_KEY`: (Optional) Google Maps API key for Places API integration. Get one at [Google Cloud Console](https://console.cloud.google.com/). Enable Places API and Geocoding API.
+- `OPENWEATHER_API_KEY`: (Optional) OpenWeatherMap API key for weather information. Get one at [OpenWeatherMap](https://openweathermap.org/api). Free tier: 60 calls/minute.
 
 ### Frontend (.env.local)
 - `NEXT_PUBLIC_API_URL`: Backend API URL (default: http://localhost:8000/api)

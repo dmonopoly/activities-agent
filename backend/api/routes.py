@@ -6,6 +6,7 @@ from typing import Optional, List, Dict, Any
 from agents.orchestrator import AgentOrchestrator
 from agents.tools.preferences import get_user_preferences, update_user_preferences
 from agents.tools.scraper import scrape_activities
+from services.activity_fetcher import fetch_activities
 
 router = APIRouter()
 
@@ -28,7 +29,6 @@ class PreferencesUpdate(BaseModel):
     interests: Optional[List[str]] = None
     budget_min: Optional[float] = None
     budget_max: Optional[float] = None
-    date_preferences: Optional[str] = None
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -78,24 +78,41 @@ async def update_preferences(user_id: str, preferences: PreferencesUpdate):
 
 @router.get("/activities")
 async def get_activities(
-    query: Optional[str] = "date ideas",
-    location: Optional[str] = None,
+    location_a: Optional[str] = None,
+    location_b: Optional[str] = None,
     user_id: Optional[str] = "default"
 ):
-    """Get activities (can be used by gallery view)"""
+    """Get activities between two locations.
+    
+    Uses the activity_fetcher service to intelligently find activities:
+    - If two locations provided, finds transit stops between them and queries nearby
+    - If one location provided, queries activities near that location
+    - Uses user preferences for interests, budget, etc.
+    
+    Args:
+        location_a: First location (defaults to user preferences if not provided)
+        location_b: Second location (optional)
+        user_id: User ID for preferences lookup
+    """
     try:
-        # Get user preferences to enhance search
+        # Use location from preferences if location_a not provided
         prefs = get_user_preferences(user_id)
+        search_location_a = location_a or prefs.get("location")
         
-        # Use location from preferences if not provided
-        search_location = location or prefs.get("location")
+        if not search_location_a:
+            raise HTTPException(
+                status_code=400,
+                detail="location_a is required (or set a default location in user preferences)"
+            )
         
-        # Build filters from preferences
-        filters = {}
-        if prefs.get("budget_max"):
-            filters["max_price"] = prefs["budget_max"]
+        result = fetch_activities(
+            location_a=search_location_a,
+            location_b=location_b,
+            user_id=user_id
+        )
         
-        activities = scrape_activities(query, search_location, filters if filters else None)
-        return {"activities": activities}
+        return result
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

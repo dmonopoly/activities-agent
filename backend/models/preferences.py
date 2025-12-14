@@ -9,5 +9,4 @@ class UserPreferences(BaseModel):
     interests: List[str] = []
     budget_min: Optional[float] = None
     budget_max: Optional[float] = None
-    date_preferences: Optional[str] = None  # e.g., "weekend", "evening", "anytime"
 

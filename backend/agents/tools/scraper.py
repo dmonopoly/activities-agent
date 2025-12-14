@@ -5,7 +5,11 @@ from bs4 import BeautifulSoup
 import re
 
 
-def scrape_activities(query: str, location: Optional[str] = None, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+def scrape_activities(
+    query: str,
+    location_a: Optional[str] = None, 
+    location_b: Optional[str] = None,
+    filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
     """
     Scrape activities from the web based on query and location
     
@@ -33,7 +37,7 @@ def scrape_activities(query: str, location: Optional[str] = None, filters: Optio
             "location": location or "Downtown",
             "description": "Join us for a relaxing yoga session as the sun sets",
             "price": "$25",
-            "date": "This Saturday, 6:00 PM",
+            "opening_hours": "This Saturday, 6:00 PM",
             "url": "https://example.com/yoga",
             "category": "Wellness"
         },
@@ -42,7 +46,7 @@ def scrape_activities(query: str, location: Optional[str] = None, filters: Optio
             "location": location or "Arts District",
             "description": "New contemporary art exhibition with wine and cheese",
             "price": "Free",
-            "date": "Friday, 7:00 PM",
+            "opening_hours": "Friday, 7:00 PM",
             "url": "https://example.com/gallery",
             "category": "Arts"
         },
@@ -51,7 +55,7 @@ def scrape_activities(query: str, location: Optional[str] = None, filters: Optio
             "location": location or "Culinary School",
             "description": "Learn to make fresh pasta and authentic Italian dishes",
             "price": "$75",
-            "date": "Next Sunday, 2:00 PM",
+            "opening_hours": "Next Sunday, 2:00 PM",
             "url": "https://example.com/cooking",
             "category": "Food & Drink"
         },
@@ -60,7 +64,7 @@ def scrape_activities(query: str, location: Optional[str] = None, filters: Optio
             "location": location or "Jazz Club",
             "description": "Intimate jazz performance with local musicians",
             "price": "$30",
-            "date": "Saturday, 8:00 PM",
+            "opening_hours": "Saturday, 8:00 PM",
             "url": "https://example.com/jazz",
             "category": "Music"
         },
@@ -69,7 +73,7 @@ def scrape_activities(query: str, location: Optional[str] = None, filters: Optio
             "location": location or "Nature Reserve",
             "description": "Moderate 3-mile hike with scenic overlooks",
             "price": "Free",
-            "date": "Any day, sunrise to sunset",
+            "opening_hours": "Any day, sunrise to sunset",
             "url": "https://example.com/hiking",
             "category": "Outdoor"
         }
