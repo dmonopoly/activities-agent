@@ -105,7 +105,7 @@ export default function PreferencesPage() {
       {/* Main Content - Immersive layout */}
       <main className="flex-1 max-w-3xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Your Preferences</h1>
-        <p className="text-gray-600 mb-8">Help us find the perfect activities for you!</p>
+        <p className="text-gray-600 mb-8">Help us find the ideal activities for you!</p>
 
           <div className="space-y-6">
             {/* Location */}
@@ -204,7 +204,7 @@ export default function PreferencesPage() {
                       budget_max: e.target.value ? parseFloat(e.target.value) : undefined,
                     })
                   }
-                  placeholder="1000"
+                  placeholder=""
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
                 />
               </div>

@@ -145,8 +145,7 @@ export default function ActivityChat({ userId = 'default' }: ActivityChatProps) 
                       strokeLinejoin="round"
                       className="w-5 h-5"
                     >
-                      <path d="m22 2-7 20-4-9-9-4Z" />
-                      <path d="M22 2 11 13" />
+                      <path d="M12 19V5M5 12l7-7 7 7" />
                     </svg>
                   </button>
                 </div>
