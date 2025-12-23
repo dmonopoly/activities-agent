@@ -7,7 +7,60 @@ allowing the application to be demoed without incurring API costs.
 Each mock data section documents the expected structure based on the real API.
 """
 
-from typing import Dict, List, Any
+import json
+from typing import Dict, List, Any, Optional
+
+from openai.types.chat import ChatCompletion, ChatCompletionMessage
+from openai.types.chat.chat_completion import Choice
+from openai.types.chat.chat_completion_message_tool_call import ChatCompletionMessageToolCall, Function
+
+
+def make_mock_completion(
+    tool_calls: Optional[List[Dict[str, Any]]] = None,
+    content: Optional[str] = None
+) -> ChatCompletion:
+    """
+    Build a real ChatCompletion object for mocking LLM responses.
+    
+    Args:
+        tool_calls: List of {"name": str, "arguments": dict} for iteration 1
+        content: Response text for final iteration (no tool calls)
+    
+    Returns:
+        A real ChatCompletion object that matches the OpenAI API structure
+    """
+    # Build tool_calls list if provided
+    message_tool_calls = None
+    if tool_calls:
+        message_tool_calls = [
+            ChatCompletionMessageToolCall(
+                id=f"call_mock_{i}",
+                type="function",
+                function=Function(
+                    name=tc["name"],
+                    arguments=json.dumps(tc.get("arguments", {}))
+                )
+            )
+            for i, tc in enumerate(tool_calls)
+        ]
+    
+    return ChatCompletion(
+        id="mock-completion",
+        choices=[
+            Choice(
+                index=0,
+                message=ChatCompletionMessage(
+                    role="assistant",
+                    content=content,
+                    tool_calls=message_tool_calls
+                ),
+                finish_reason="tool_calls" if tool_calls else "stop"
+            )
+        ],
+        created=1234567890,
+        model="mock-model",
+        object="chat.completion"
+    )
 
 # =============================================================================
 # WEATHER API MOCK DATA
@@ -168,7 +221,7 @@ MOCK_TRANSIT_STOPS: List[Dict[str, Any]] = [
 
 MOCK_PLACES: List[Dict[str, Any]] = [
     {
-        "name": "Dolores Park",
+        "name": "[Stub] Dolores Park",
         "location": "Dolores St & 19th St, San Francisco, CA 94114",
         "description": "Reviewers mention: local favorite, unique. Matches interests: outdoor",
         "price": None,
@@ -184,7 +237,7 @@ MOCK_PLACES: List[Dict[str, Any]] = [
         "coordinates": {"lat": 37.7598, "lng": -122.4269}
     },
     {
-        "name": "Sightglass Coffee",
+        "name": "[Stub] Sightglass Coffee",
         "location": "270 7th St, San Francisco, CA 94103",
         "description": "Reviewers mention: unique, authentic. Matches interests: coffee",
         "price": "$$",
@@ -200,39 +253,7 @@ MOCK_PLACES: List[Dict[str, Any]] = [
         "coordinates": {"lat": 37.7771, "lng": -122.4074}
     },
     {
-        "name": "Foreign Cinema",
-        "location": "2534 Mission St, San Francisco, CA 94110",
-        "description": "Reviewers mention: romantic, unique. Matches interests: food, romantic",
-        "price": "$$$",
-        "date": "Tue-Sun: 5:30PM-10PM; Closed Monday",
-        "url": "https://maps.google.com/?cid=mock3",
-        "image_url": None,
-        "category": "Restaurant",
-        "gmaps_place_id": "ChIJmock_foreign_cinema",
-        "gmaps_rating": 4.4,
-        "gmaps_price_level": 3,
-        "gmaps_opening_hours": "Tue-Sun: 5:30PM-10PM; Closed Monday",
-        "gmaps_review_summary": "Reviewers mention: romantic, unique. Matches interests: food, romantic",
-        "coordinates": {"lat": 37.7567, "lng": -122.4184}
-    },
-    {
-        "name": "SF MOMA",
-        "location": "151 3rd St, San Francisco, CA 94103",
-        "description": "Reviewers mention: one-of-a-kind, special. Matches interests: art",
-        "price": "$$",
-        "date": "Fri-Tue: 10AM-5PM; Thu: 1PM-8PM; Closed Wed",
-        "url": "https://maps.google.com/?cid=mock4",
-        "image_url": None,
-        "category": "Tourist Attraction",
-        "gmaps_place_id": "ChIJmock_sfmoma",
-        "gmaps_rating": 4.6,
-        "gmaps_price_level": 2,
-        "gmaps_opening_hours": "Fri-Tue: 10AM-5PM; Thu: 1PM-8PM; Closed Wed",
-        "gmaps_review_summary": "Reviewers mention: one-of-a-kind, special. Matches interests: art",
-        "coordinates": {"lat": 37.7857, "lng": -122.4011}
-    },
-    {
-        "name": "Tartine Bakery",
+        "name": "[Stub] Tartine Bakery",
         "location": "600 Guerrero St, San Francisco, CA 94110",
         "description": "Reviewers mention: local favorite, authentic. Matches interests: food, coffee",
         "price": "$$",
@@ -248,7 +269,7 @@ MOCK_PLACES: List[Dict[str, Any]] = [
         "coordinates": {"lat": 37.7614, "lng": -122.4241}
     },
     {
-        "name": "Lands End Trail",
+        "name": "[Stub] Lands End Trail",
         "location": "Lands End Trail, San Francisco, CA 94121",
         "description": "Reviewers mention: hidden gem, scenic. Matches interests: outdoor",
         "price": None,
@@ -264,23 +285,7 @@ MOCK_PLACES: List[Dict[str, Any]] = [
         "coordinates": {"lat": 37.7875, "lng": -122.5048}
     },
     {
-        "name": "The Interval at Long Now",
-        "location": "2 Marina Blvd, San Francisco, CA 94123",
-        "description": "Reviewers mention: unique, one-of-a-kind. Matches interests: coffee, art",
-        "price": "$$",
-        "date": "Tue-Sun: 10AM-10PM; Closed Monday",
-        "url": "https://maps.google.com/?cid=mock7",
-        "image_url": None,
-        "category": "Cafe",
-        "gmaps_place_id": "ChIJmock_interval",
-        "gmaps_rating": 4.6,
-        "gmaps_price_level": 2,
-        "gmaps_opening_hours": "Tue-Sun: 10AM-10PM; Closed Monday",
-        "gmaps_review_summary": "Reviewers mention: unique, one-of-a-kind. Matches interests: coffee, art",
-        "coordinates": {"lat": 37.8066, "lng": -122.4286}
-    },
-    {
-        "name": "Stern Grove",
+        "name": "[Stub] Stern Grove",
         "location": "19th Ave & Sloat Blvd, San Francisco, CA 94132",
         "description": "Reviewers mention: local favorite, unique. Matches interests: outdoor, music",
         "price": None,
@@ -296,55 +301,7 @@ MOCK_PLACES: List[Dict[str, Any]] = [
         "coordinates": {"lat": 37.7327, "lng": -122.4710}
     },
     {
-        "name": "Piccino",
-        "location": "1001 Minnesota St, San Francisco, CA 94107",
-        "description": "Reviewers mention: hidden gem, authentic. Matches interests: food, romantic",
-        "price": "$$$",
-        "date": "Tue-Sun: 11:30AM-9PM; Closed Monday",
-        "url": "https://maps.google.com/?cid=mock9",
-        "image_url": None,
-        "category": "Restaurant",
-        "gmaps_place_id": "ChIJmock_piccino",
-        "gmaps_rating": 4.5,
-        "gmaps_price_level": 3,
-        "gmaps_opening_hours": "Tue-Sun: 11:30AM-9PM; Closed Monday",
-        "gmaps_review_summary": "Reviewers mention: hidden gem, authentic. Matches interests: food, romantic",
-        "coordinates": {"lat": 37.7554, "lng": -122.3896}
-    },
-    {
-        "name": "Exploratorium",
-        "location": "Pier 15, San Francisco, CA 94111",
-        "description": "Reviewers mention: special, unique. Matches interests: art",
-        "price": "$$",
-        "date": "Tue-Sun: 10AM-5PM; Thu: 6PM-10PM (18+); Closed Monday",
-        "url": "https://maps.google.com/?cid=mock10",
-        "image_url": None,
-        "category": "Tourist Attraction",
-        "gmaps_place_id": "ChIJmock_exploratorium",
-        "gmaps_rating": 4.7,
-        "gmaps_price_level": 2,
-        "gmaps_opening_hours": "Tue-Sun: 10AM-5PM; Thu: 6PM-10PM (18+); Closed Monday",
-        "gmaps_review_summary": "Reviewers mention: special, unique. Matches interests: art",
-        "coordinates": {"lat": 37.8017, "lng": -122.3973}
-    },
-    {
-        "name": "Bi-Rite Creamery",
-        "location": "3692 18th St, San Francisco, CA 94110",
-        "description": "Reviewers mention: local favorite, delicious. Matches interests: food",
-        "price": "$",
-        "date": "Sun-Thu: 11AM-9PM; Fri-Sat: 11AM-10PM",
-        "url": "https://maps.google.com/?cid=mock11",
-        "image_url": None,
-        "category": "Cafe",
-        "gmaps_place_id": "ChIJmock_birite",
-        "gmaps_rating": 4.6,
-        "gmaps_price_level": 1,
-        "gmaps_opening_hours": "Sun-Thu: 11AM-9PM; Fri-Sat: 11AM-10PM",
-        "gmaps_review_summary": "Reviewers mention: local favorite, delicious. Matches interests: food",
-        "coordinates": {"lat": 37.7617, "lng": -122.4255}
-    },
-    {
-        "name": "California Academy of Sciences",
+        "name": "[Stub] California Academy of Sciences",
         "location": "55 Music Concourse Dr, San Francisco, CA 94118",
         "description": "Reviewers mention: one-of-a-kind, special, unique. Matches interests: art, outdoor",
         "price": "$$$",
@@ -363,25 +320,26 @@ MOCK_PLACES: List[Dict[str, Any]] = [
 
 
 # =============================================================================
-# ORCHESTRATOR MOCK RESPONSES
+# ORCHESTRATOR MOCK DATA
 # =============================================================================
-# These simulate complete LLM agent responses with tool results.
-# Used when ENABLE_OPENAI_API is False to demo the full flow.
+# Two lists with identical format:
+# - "response": Final LLM response text
+# - "tool_calls": What LLM requests on iteration 1 (name + arguments)
+# - "tool_results": Expected results (for reference/testing)
 #
-# Structure:
-# {
-#     "response": str,           # The assistant's text response
-#     "tool_results": [          # List of tool calls that were "made"
-#         {
-#             "tool": str,       # Tool name
-#             "result": Any      # Tool result (matches real tool output)
-#         }
-#     ]
-# }
+# In mock mode:
+# - Iteration 1: Return ChatCompletion with tool_calls → tools actually execute
+# - Iteration 2: Return ChatCompletion with response content
+# =============================================================================
 
-MOCK_ORCHESTRATOR_RESPONSES: List[Dict[str, Any]] = [
+# Responses where tools were called
+MOCK_RESPONSES_WITH_TOOLS: List[Dict[str, Any]] = [
     {
         "response": "I found some great activities for you! There's a lovely hiking trail at Sunset Ridge Park, a pottery class downtown, and a new escape room that just opened. Would you like me to save these to a spreadsheet?",
+        "tool_calls": [
+            {"name": "get_user_preferences", "arguments": {"user_id": "default"}},
+            {"name": "scrape_activities", "arguments": {"query": "fun activities", "location": "San Francisco"}}
+        ],
         "tool_results": [
             {"tool": "get_user_preferences", "result": {"interests": ["hiking", "arts"], "location": "San Francisco"}},
             {"tool": "scrape_activities", "result": [
@@ -393,6 +351,9 @@ MOCK_ORCHESTRATOR_RESPONSES: List[Dict[str, Any]] = [
     },
     {
         "response": "The weather looks perfect for outdoor activities this weekend! It'll be sunny with highs around 72°F. I'd recommend checking out the farmers market or having a picnic at Golden Gate Park.",
+        "tool_calls": [
+            {"name": "get_weather_for_location", "arguments": {"location": "San Francisco, CA"}}
+        ],
         "tool_results": [
             {"tool": "get_weather_for_location", "result": {
                 "location": "San Francisco, CA",
@@ -406,6 +367,13 @@ MOCK_ORCHESTRATOR_RESPONSES: List[Dict[str, Any]] = [
     },
     {
         "response": "I've found some wonderful date spots between your two locations! There's a cozy wine bar, an art gallery with a new exhibit, and a rooftop restaurant with amazing views.",
+        "tool_calls": [
+            {"name": "search_places_for_dates", "arguments": {
+                "location1": "San Francisco, CA",
+                "location2": "Oakland, CA",
+                "place_types": ["cafe", "restaurant", "park"]
+            }}
+        ],
         "tool_results": [
             {"tool": "search_places_for_dates", "result": {
                 "activities": [
@@ -413,48 +381,73 @@ MOCK_ORCHESTRATOR_RESPONSES: List[Dict[str, Any]] = [
                     {"name": "Modern Perspectives Gallery", "gmaps_rating": 4.4, "category": "Tourist Attraction"},
                     {"name": "Skyline Bistro", "gmaps_rating": 4.9, "category": "Restaurant"}
                 ],
-                "midpoint": {"lat": 37.7749, "lng": -122.4194},
+                "search_mode": "transit_stops",
                 "count": 3
             }}
         ]
     },
     {
         "response": "I've saved those activities to your spreadsheet! You can access it anytime to review your saved ideas.",
+        "tool_calls": [
+            {"name": "save_to_sheets", "arguments": {
+                "activities": [{"name": "Test Activity", "location": "SF"}],
+                "spreadsheet_id": "mock-sheet-id"
+            }}
+        ],
         "tool_results": [
             {"tool": "save_to_sheets", "result": {"success": True, "rows_added": 3, "sheet_url": "https://docs.google.com/spreadsheets/d/mock123"}}
         ]
     },
     {
         "response": "I've updated your preferences! I'll keep your love for outdoor activities and Italian food in mind for future recommendations.",
+        "tool_calls": [
+            {"name": "update_user_preferences", "arguments": {
+                "user_id": "default",
+                "preferences": {"interests": ["outdoor", "food"], "cuisine": "Italian"}
+            }}
+        ],
         "tool_results": [
             {"tool": "update_user_preferences", "result": {"updated": True, "preferences": {"interests": ["outdoor", "food"], "cuisine": "Italian"}}}
         ]
     },
     {
-        "response": "Here's what I know about your preferences so far. You enjoy hiking and trying new restaurants. Want me to search for activities based on these?",
-        "tool_results": [
-            {"tool": "get_user_preferences", "result": {"interests": ["hiking", "restaurants"], "budget": "moderate"}}
-        ]
-    },
-    {
-        "response": "Great question! I'd be happy to help you find some fun things to do. What kind of activities are you interested in?",
-        "tool_results": []
-    },
-    {
         "response": "Based on your preferences and the nice weather forecast, I recommend the outdoor concert series at the amphitheater this Saturday. It's supposed to be 68°F and clear skies!",
+        "tool_calls": [
+            {"name": "get_user_preferences", "arguments": {"user_id": "default"}},
+            {"name": "get_weather_for_location", "arguments": {"location": "San Francisco, CA"}},
+            {"name": "scrape_activities", "arguments": {"query": "outdoor concert", "location": "San Francisco"}}
+        ],
         "tool_results": [
             {"tool": "get_user_preferences", "result": {"interests": ["music", "outdoor"]}},
             {"tool": "get_weather_for_location", "result": {
                 "location": "San Francisco, CA",
                 "temperature": 68,
                 "condition": "clear",
-                "precipitation": 0,
                 "outdoor_suitable": True
             }},
             {"tool": "scrape_activities", "result": [
                 {"name": "Summer Concert Series", "type": "music", "date": "Saturday", "venue": "Riverside Amphitheater"}
             ]}
         ]
+    }
+]
+
+# Responses where no tools were needed
+MOCK_RESPONSES_NO_TOOLS: List[Dict[str, Any]] = [
+    {
+        "response": "Great question! I'd be happy to help you find some fun things to do. What kind of activities are you interested in? Are you looking for outdoor adventures, arts and culture, food experiences, or something else?",
+        "tool_calls": [],
+        "tool_results": []
+    },
+    {
+        "response": "Sure! To give you the best recommendations, could you tell me a bit about what you're in the mood for? Something active, relaxing, or maybe a mix of both?",
+        "tool_calls": [],
+        "tool_results": []
+    },
+    {
+        "response": "I can help with that! Are you planning something for just yourself, a date, or a group outing? That'll help me tailor my suggestions.",
+        "tool_calls": [],
+        "tool_results": []
     }
 ]
 

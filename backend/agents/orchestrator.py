@@ -2,14 +2,17 @@
 import json
 import os
 import random
-import sys
 
 from typing import List, Dict, Any
 from openai import OpenAI
 from openai.types.chat import ChatCompletion
 
 from agents.config import ENABLE_OPENAI_API
-from agents.mock_data import MOCK_ORCHESTRATOR_RESPONSES
+from agents.mock_data import (
+    MOCK_RESPONSES_WITH_TOOLS,
+    MOCK_RESPONSES_NO_TOOLS,
+    make_mock_completion
+)
 from agents.tools.google_maps import search_places_for_dates, TOOL_DEFINITION as GOOGLE_MAPS_TOOL
 from agents.tools.weather import get_weather_for_location, TOOL_DEFINITION as WEATHER_TOOL
 from agents.tools.scraper import scrape_activities, TOOL_DEFINITION as SCRAPER_TOOL
@@ -77,6 +80,42 @@ class AgentOrchestrator:
         self.conversation_history: List[Dict[str, Any]] = [
             {"role": "system", "content": SYSTEM_PROMPT}
         ]
+        # Mock state (reset per message)
+        self._mock_iteration = 0
+        self._mock_scenario: Dict[str, Any] = {}
+    
+    def _get_completion(self, model: str) -> ChatCompletion:
+        """
+        Get a chat completion from the LLM (or mock if API disabled).
+        
+        In mock mode:
+        - Iteration 1: Returns ChatCompletion with tool_calls (if scenario has tools)
+        - Iteration 2+: Returns ChatCompletion with final content
+        """
+        if not ENABLE_OPENAI_API:
+            self._mock_iteration += 1
+            scenario = self._mock_scenario
+            tool_calls = scenario.get("tool_calls", [])
+            
+            if self._mock_iteration == 1 and tool_calls:
+                # First iteration with tools: return tool calls
+                print(f"[ORCHESTRATOR] ❌ API DISABLED - returning MOCK tool calls")
+                print(f"[ORCHESTRATOR] Mock tools: {[tc['name'] for tc in tool_calls]}")
+                return make_mock_completion(tool_calls=tool_calls)
+            else:
+                # Final iteration: return response content
+                content = scenario.get("response", "Mock response")
+                print(f"[ORCHESTRATOR] ❌ API DISABLED - returning MOCK final response")
+                print(f"[ORCHESTRATOR] Mock response preview: {content[:80]}...")
+                return make_mock_completion(content=content)
+        
+        print(f"[ORCHESTRATOR] ✅ API ENABLED - calling OpenRouter API with model={model}")
+        return client.chat.completions.create(
+            model=model,
+            messages=self.conversation_history,
+            tools=ALL_TOOLS,
+            tool_choice="auto"
+        )
     
     def _execute_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Any:
         """Execute a tool function with automatic context injection based on tool definition"""
@@ -104,7 +143,7 @@ class AgentOrchestrator:
     
     def process_message(self, message: str, model: str = "openai/gpt-4o-mini") -> Dict[str, Any]:
         """
-        Process a user message and return agent response
+        Process a user message and return agent response.
         
         Args:
             message: User's message
@@ -114,42 +153,32 @@ class AgentOrchestrator:
             Dictionary with response and any tool results
         """
         self.conversation_history.append({"role": "user", "content": message})
+        
         print(f"[ORCHESTRATOR] process_message called with message: {message[:100]}")
         print(f"[ORCHESTRATOR] ENABLE_OPENAI_API={ENABLE_OPENAI_API}")
         print(f"[ORCHESTRATOR] Conversation history length: {len(self.conversation_history)}")
 
+        # Reset mock state and select scenario for this message
+        self._mock_iteration = 0
+        if not ENABLE_OPENAI_API:
+            self._mock_scenario = random.choice(MOCK_RESPONSES_WITH_TOOLS)
+
         max_iterations = 3
         iteration = 0
-        all_tool_results = []  # Accumulate tool results across all iterations
+        all_tool_results = []
         
         while iteration < max_iterations:
-            print(f'[ORCHESTRATOR] Iteration {iteration}/{max_iterations}')
             iteration += 1
+            print(f'[ORCHESTRATOR] Iteration {iteration}/{max_iterations}')
             
-            if not ENABLE_OPENAI_API:
-                mock = random.choice(MOCK_ORCHESTRATOR_RESPONSES)
-                tools_used = [t['tool'] for t in mock['tool_results']]
-                print(f"[ORCHESTRATOR] ❌ API DISABLED - returning MOCK response")
-                print(f"[ORCHESTRATOR] Mock tools: {tools_used if tools_used else 'none'}")
-                print(f"[ORCHESTRATOR] Mock response preview: {mock['response'][:80]}...")
-                return mock
-            
-            print(f"[ORCHESTRATOR] ✅ API ENABLED - calling OpenRouter API with model={model}")
-            response: ChatCompletion = client.chat.completions.create(
-                model=model,
-                messages=self.conversation_history,
-                tools=ALL_TOOLS,
-                tool_choice="auto"
-            )
-
+            response = self._get_completion(model)
             message_response = response.choices[0].message
-            print(f"[ORCHESTRATOR] API response received, has_tool_calls={bool(message_response.tool_calls)}")
+            print(f"[ORCHESTRATOR] Response received, has_tool_calls={bool(message_response.tool_calls)}")
             
             assistant_message = {
                 "role": "assistant",
                 "content": message_response.content
             }
-            # Only include tool_calls if they exist (API doesn't allow empty arrays)
             if message_response.tool_calls:
                 assistant_message["tool_calls"] = [
                     {
@@ -176,19 +205,14 @@ class AgentOrchestrator:
                 tool_name = tool_call.function.name
                 try:
                     arguments = json.loads(tool_call.function.arguments)
-                except:
+                except json.JSONDecodeError:
                     arguments = {}
                 
                 print(f'[ORCHESTRATOR] Executing tool: {tool_name} with args: {arguments}')
                 result = self._execute_tool(tool_name, arguments)
-
                 print(f'[ORCHESTRATOR] Tool {tool_name} completed')
-                tool_result_entry = {
-                    "tool": tool_name,
-                    "result": result
-                }
-                all_tool_results.append(tool_result_entry)
                 
+                all_tool_results.append({"tool": tool_name, "result": result})
                 self.conversation_history.append({
                     "role": "tool",
                     "tool_call_id": tool_call.id,

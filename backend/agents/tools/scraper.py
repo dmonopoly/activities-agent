@@ -33,7 +33,7 @@ def scrape_activities(
     # This demonstrates the tool structure
     sample_activities = [
         {
-            "name": "Sunset Yoga in the Park",
+            "name": "[Stub] Sunset Yoga in the Park",
             "location": location or "Downtown",
             "description": "Join us for a relaxing yoga session as the sun sets",
             "price": "$25",
@@ -42,7 +42,7 @@ def scrape_activities(
             "category": "Wellness"
         },
         {
-            "name": "Art Gallery Opening",
+            "name": "[Stub] Art Gallery Opening",
             "location": location or "Arts District",
             "description": "New contemporary art exhibition with wine and cheese",
             "price": "Free",
@@ -51,7 +51,7 @@ def scrape_activities(
             "category": "Arts"
         },
         {
-            "name": "Cooking Class: Italian Cuisine",
+            "name": "[Stub] Cooking Class: Italian Cuisine",
             "location": location or "Culinary School",
             "description": "Learn to make fresh pasta and authentic Italian dishes",
             "price": "$75",
@@ -60,7 +60,7 @@ def scrape_activities(
             "category": "Food & Drink"
         },
         {
-            "name": "Live Jazz Night",
+            "name": "[Stub] Live Jazz Night",
             "location": location or "Jazz Club",
             "description": "Intimate jazz performance with local musicians",
             "price": "$30",
@@ -69,7 +69,7 @@ def scrape_activities(
             "category": "Music"
         },
         {
-            "name": "Hiking Trail: Mountain View",
+            "name": "[Stub] Hiking Trail: Mountain View",
             "location": location or "Nature Reserve",
             "description": "Moderate 3-mile hike with scenic overlooks",
             "price": "Free",
