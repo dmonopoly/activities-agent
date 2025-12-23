@@ -18,6 +18,10 @@ Thumbs.db
 *.sublime-project
 *.sublime-workspace
 
+# Virtual environments (Python)
+venv/
+.venv/
+
 # Environment variables
 .env
 .env.local

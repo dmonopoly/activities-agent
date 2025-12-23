@@ -338,7 +338,7 @@ MOCK_RESPONSES_WITH_TOOLS: List[Dict[str, Any]] = [
         "response": "I found some great activities for you! There's a lovely hiking trail at Sunset Ridge Park, a pottery class downtown, and a new escape room that just opened. Would you like me to save these to a spreadsheet?",
         "tool_calls": [
             {"name": "get_user_preferences", "arguments": {"user_id": "default"}},
-            {"name": "scrape_activities", "arguments": {"query": "fun activities", "location": "San Francisco"}}
+            {"name": "scrape_activities", "arguments": {"query": "fun activities", "location_a": "San Francisco"}}
         ],
         "tool_results": [
             {"tool": "get_user_preferences", "result": {"interests": ["hiking", "arts"], "location": "San Francisco"}},
@@ -415,7 +415,7 @@ MOCK_RESPONSES_WITH_TOOLS: List[Dict[str, Any]] = [
         "tool_calls": [
             {"name": "get_user_preferences", "arguments": {"user_id": "default"}},
             {"name": "get_weather_for_location", "arguments": {"location": "San Francisco, CA"}},
-            {"name": "scrape_activities", "arguments": {"query": "outdoor concert", "location": "San Francisco"}}
+            {"name": "scrape_activities", "arguments": {"query": "outdoor concert", "location_a": "San Francisco"}}
         ],
         "tool_results": [
             {"tool": "get_user_preferences", "result": {"interests": ["music", "outdoor"]}},

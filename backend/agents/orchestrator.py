@@ -10,7 +10,6 @@ from openai.types.chat import ChatCompletion
 from agents.config import ENABLE_OPENROUTER_API
 from agents.mock_data import (
     MOCK_RESPONSES_WITH_TOOLS,
-    MOCK_RESPONSES_NO_TOOLS,
     make_mock_completion
 )
 from agents.tools.google_maps import search_places_for_dates, TOOL_DEFINITION as GOOGLE_MAPS_TOOL
@@ -22,11 +21,13 @@ from agents.tools.preferences import (
     update_user_preferences,
     TOOL_DEFINITIONS as PREFERENCES_TOOLS
 )
+from agents.available_tools import filter_to_available_tools
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
-OPENROUTER_DEFAULT_MODEL = "xiaomi/mimo-v2-flash:free"
-# OPENROUTER_DEFAULT_MODEL = "openai/gpt-4o-mini"
+# OPENROUTER_DEFAULT_MODEL = 'xiaomi/mimo-v2-flash:free'
+OPENROUTER_DEFAULT_MODEL = 'google/gemini-2.0-flash-exp:free'
+# OPENROUTER_DEFAULT_MODEL = 'openai/gpt-4o-mini'
 
 if not OPENROUTER_API_KEY:
     raise ValueError("OPENROUTER_API_KEY environment variable is required")
@@ -182,28 +183,20 @@ class AgentOrchestrator:
                 "content": message_response.content
             }
             if message_response.tool_calls:
-                assistant_message["tool_calls"] = [
-                    {
-                        "id": tc.id,
-                        "type": tc.type,
-                        "function": {
-                            "name": tc.function.name,
-                            "arguments": tc.function.arguments
-                        }
-                    } for tc in message_response.tool_calls
-                ]
+                assistant_message["tool_calls"] = filter_to_available_tools(message_response.tool_calls)
             self.conversation_history.append(assistant_message)
             
-            if not message_response.tool_calls:
+            if "tool_calls" not in assistant_message or not assistant_message["tool_calls"]:
                 print(f"[ORCHESTRATOR] No tool calls, returning final response")
+                # TODO: If tools empty, returns empty message. Return actual content and explain tool skipped?
                 return {
                     "response": message_response.content,
                     "tool_results": all_tool_results
                 }
             
-            # Execute tool calls
-            print(f"[ORCHESTRATOR] Executing {len(message_response.tool_calls)} tool call(s)")
-            for tool_call in message_response.tool_calls:
+            num_tool_calls = len(assistant_message["tool_calls"]) if "tool_calls" in assistant_message and assistant_message["tool_calls"] else 0
+            print(f'[ORCHESTRATOR] Executing {num_tool_calls} tool call(s)')
+            for tool_call in assistant_message["tool_calls"]:
                 tool_name = tool_call.function.name
                 try:
                     arguments = json.loads(tool_call.function.arguments)
