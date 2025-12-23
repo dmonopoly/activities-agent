@@ -5,7 +5,8 @@ from typing import Optional, List, Dict, Any
 
 from agents.orchestrator import AgentOrchestrator
 from agents.tools.preferences import get_user_preferences, update_user_preferences
-from agents.tools.scraper import scrape_activities
+from services.scraper_job import run_scrape_job
+from services.scraper_cache import get_cache_stats
 from services.activity_fetcher import fetch_activities
 
 router = APIRouter()
@@ -119,5 +120,50 @@ async def get_activities(
         return result
     except HTTPException:
         raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/scrape")
+async def trigger_scrape():
+    """
+    Manually trigger a scrape job.
+    
+    This endpoint runs the scraper immediately and returns statistics
+    about the scrape results.
+    
+    Returns:
+        Dict with scrape statistics including:
+        - success: Whether the scrape completed successfully
+        - total_activities: Number of activities scraped
+        - by_source: Breakdown by source site
+        - duration_seconds: How long the scrape took
+        - timestamp: When the scrape completed
+    """
+    try:
+        print("[API] Manual scrape triggered")
+        result = run_scrape_job()
+        return result
+    except Exception as e:
+        import traceback
+        print(f"[ERROR][/scrape] Exception: {type(e).__name__}: {e}")
+        print(f"[ERROR][/scrape] Traceback:\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/scrape/status")
+async def get_scrape_status():
+    """
+    Get the current status of the scrape cache.
+    
+    Returns:
+        Dict with cache statistics including:
+        - last_updated: When the cache was last updated
+        - total_activities: Number of cached activities
+        - by_source: Breakdown by source site
+    """
+    try:
+        stats = get_cache_stats()
+        return stats
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

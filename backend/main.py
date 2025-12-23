@@ -1,5 +1,7 @@
 """Main FastAPI application"""
+import os
 from pathlib import Path
+from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
 # Load environment variables FIRST, before any other imports
@@ -10,8 +12,45 @@ load_dotenv(dotenv_path=env_path)
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.routes import router
+from services.scraper_scheduler import (
+    start_scraper_scheduler,
+    stop_scraper_scheduler,
+    get_scheduler_status
+)
 
-app = FastAPI(title="Activities Agent API", version="1.0.0")
+# Check if scraper scheduler should be enabled
+ENABLE_SCRAPER_SCHEDULER = os.getenv("ENABLE_SCRAPER_SCHEDULER", "true").lower() == "true"
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Lifespan context manager for FastAPI app.
+    
+    Handles startup and shutdown events:
+    - Startup: Start the background scraper scheduler
+    - Shutdown: Stop the scheduler gracefully
+    """
+    # Startup
+    if ENABLE_SCRAPER_SCHEDULER:
+        print("[MAIN] Starting scraper scheduler...")
+        start_scraper_scheduler()
+    else:
+        print("[MAIN] Scraper scheduler disabled (ENABLE_SCRAPER_SCHEDULER=false)")
+    
+    yield  # App runs here
+    
+    # Shutdown
+    if ENABLE_SCRAPER_SCHEDULER:
+        print("[MAIN] Stopping scraper scheduler...")
+        stop_scraper_scheduler()
+
+
+app = FastAPI(
+    title="Activities Agent API",
+    version="1.0.0",
+    lifespan=lifespan
+)
 
 # CORS configuration
 app.add_middleware(
@@ -33,7 +72,11 @@ async def root():
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy"}
+    scheduler_status = get_scheduler_status()
+    return {
+        "status": "healthy",
+        "scraper_scheduler": scheduler_status
+    }
 
 
 if __name__ == "__main__":
