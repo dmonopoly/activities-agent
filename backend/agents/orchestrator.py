@@ -7,7 +7,7 @@ from typing import List, Dict, Any
 from openai import OpenAI
 from openai.types.chat import ChatCompletion
 
-from agents.config import ENABLE_OPENAI_API
+from agents.config import ENABLE_OPENROUTER_API
 from agents.mock_data import (
     MOCK_RESPONSES_WITH_TOOLS,
     MOCK_RESPONSES_NO_TOOLS,
@@ -25,6 +25,8 @@ from agents.tools.preferences import (
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+OPENROUTER_DEFAULT_MODEL = "xiaomi/mimo-v2-flash:free"
+# OPENROUTER_DEFAULT_MODEL = "openai/gpt-4o-mini"
 
 if not OPENROUTER_API_KEY:
     raise ValueError("OPENROUTER_API_KEY environment variable is required")
@@ -92,7 +94,7 @@ class AgentOrchestrator:
         - Iteration 1: Returns ChatCompletion with tool_calls (if scenario has tools)
         - Iteration 2+: Returns ChatCompletion with final content
         """
-        if not ENABLE_OPENAI_API:
+        if not ENABLE_OPENROUTER_API:
             self._mock_iteration += 1
             scenario = self._mock_scenario
             tool_calls = scenario.get("tool_calls", [])
@@ -141,7 +143,7 @@ class AgentOrchestrator:
         except Exception as e:
             return {"error": str(e)}
     
-    def process_message(self, message: str, model: str = "openai/gpt-4o-mini") -> Dict[str, Any]:
+    def process_message(self, message: str, model: str = OPENROUTER_DEFAULT_MODEL) -> Dict[str, Any]:
         """
         Process a user message and return agent response.
         
@@ -155,12 +157,12 @@ class AgentOrchestrator:
         self.conversation_history.append({"role": "user", "content": message})
         
         print(f"[ORCHESTRATOR] process_message called with message: {message[:100]}")
-        print(f"[ORCHESTRATOR] ENABLE_OPENAI_API={ENABLE_OPENAI_API}")
+        print(f"[ORCHESTRATOR] ENABLE_OPENROUTER_API={ENABLE_OPENROUTER_API}")
         print(f"[ORCHESTRATOR] Conversation history length: {len(self.conversation_history)}")
 
         # Reset mock state and select scenario for this message
         self._mock_iteration = 0
-        if not ENABLE_OPENAI_API:
+        if not ENABLE_OPENROUTER_API:
             self._mock_scenario = random.choice(MOCK_RESPONSES_WITH_TOOLS)
 
         max_iterations = 3
