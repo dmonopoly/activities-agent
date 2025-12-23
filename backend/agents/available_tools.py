@@ -6,7 +6,7 @@ allowing certain tools to be denylisted (e.g., for testing, cost control,
 or feature flags).
 """
 
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 
 ALLOWLISTED_TOOLS: set[str] = {
     # User preferences
@@ -26,10 +26,19 @@ ALLOWLISTED_TOOLS: set[str] = {
     # 'search_places_for_dates',
 }
 
+TOOL_DISPLAY_NAMES: Dict[str, str] = {
+    "search_places_for_dates": "Google Maps",
+    "get_weather_for_location": "Weather",
+    "scrape_activities": "Web Scraper",
+    "save_to_sheets": "Google Sheets",
+    "get_user_preferences": "Preferences",
+    "update_user_preferences": "Preferences",
+}
+
 
 def filter_to_available_tools(
     tool_calls: List[Any]
-) -> List[Dict[str, Any]]:
+) -> Tuple[List[Dict[str, Any]], List[str]]:
     """
     Filter tool calls to only include available (non-denylisted) tools.
     
@@ -40,16 +49,21 @@ def filter_to_available_tools(
         tool_calls: List of ChatCompletionMessageToolCall objects from the LLM response
         
     Returns:
-        List of tool call dicts with keys: id, type, function
-        Only includes tools in ALLOWLISTED_TOOLS
+        Tuple of:
+        - List of tool call dicts with keys: id, type, function (only allowlisted tools)
+        - List of display names for skipped tools (deduplicated)
     """
     filtered = []
+    skipped_display_names: List[str] = []
     
     for tc in tool_calls:
         tool_name = tc.function.name
         
         if tool_name not in ALLOWLISTED_TOOLS:
-            print(f"[TOOLS] ⛔ Skipping tool not on allowlist: {tool_name}")
+            display_name = TOOL_DISPLAY_NAMES.get(tool_name, tool_name)
+            if display_name not in skipped_display_names:
+                skipped_display_names.append(display_name)
+            print(f"[TOOLS] ⛔ Skipping tool not on allowlist: {tool_name} ({display_name})")
             continue
         
         # Convert to dict format for conversation history
@@ -63,4 +77,4 @@ def filter_to_available_tools(
             }
         })
     
-    return filtered
+    return filtered, skipped_display_names
