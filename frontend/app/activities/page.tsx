@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import Header from '@/components/ui/Header';
 import { api, Activity } from '@/lib/api';
 import ActivityCard from '@/components/ui/ActivityCard';
 import ActivityChat from '@/components/chat/ActivityChat';
@@ -49,29 +49,7 @@ export default function ActivitiesPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="text-2xl font-bold text-[#FF385D]">
-              Activities Agent
-            </Link>
-            <nav className="flex gap-6">
-              <Link href="/" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-                New Chat
-              </Link>
-              <Link href="/history" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-                Chat History
-              </Link>
-              <Link href="/activities" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-                Browse Activities
-              </Link>
-              <Link href="/preferences" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-                Preferences
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Header userId={userId} />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
