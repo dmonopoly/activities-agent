@@ -251,15 +251,19 @@ class AgentOrchestrator:
                         "content": fallback_content
                     })
                     
+                    skipped_tools_msg = self._build_skipped_tools_message(all_skipped_tools)
+                    fallback_content += "\n\n(Note:" + skipped_tools_msg + ")" if skipped_tools_msg else ""
                     return {
-                        "response": fallback_content or "I couldn't generate a response.",
+                        "response": fallback_content.strip() or "I couldn't generate a response.",
                         "tool_results": all_tool_results,
-                        "skipped_tools_message": self._build_skipped_tools_message(all_skipped_tools)
+                        "skipped_tools_message": skipped_tools_msg
                     }
                 
                 print(f"[ORCHESTRATOR] No tool calls, returning final response")
+                final_msg = content if content else ""
+                final_msg += " " + skipped_tools_msg if skipped_tools_msg else ""
                 return {
-                    "response": content or "I couldn't generate a response.",
+                    "response": final_msg.strip() or "I couldn't generate a response.",
                     "tool_results": all_tool_results,
                     "skipped_tools_message": self._build_skipped_tools_message(all_skipped_tools) if all_skipped_tools else None
                 }
