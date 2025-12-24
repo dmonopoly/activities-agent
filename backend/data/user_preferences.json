@@ -2,36 +2,36 @@
   "user_lic_nyc": {
     "user_id": "user_lic_nyc",
     "location": "Long Island City, NY",
-    "interests": [],
+    "interests": ["art", "unique coffee shops", "walks"],
     "budget_min": null,
-    "budget_max": 20.0
+    "budget_max": 30.0
   },
   "user_dumbo_nyc": {
     "user_id": "user_dumbo_nyc",
-    "location": "Long Island City, NY",
-    "interests": [],
+    "location": "Dumbo, Brooklyn, NY",
+    "interests": ["outdoor", "beautiful views", "romantic"],
     "budget_min": null,
-    "budget_max": 20.0
+    "budget_max": 75.0
   },
   "user_williamsburg_nyc": {
-    "user_id": "user_1762676791163_bao1n2b7p",
-    "location": "Long Island City, NY",
-    "interests": [],
+    "user_id": "user_williamsburg_nyc",
+    "location": "Williamsburg, Brooklyn, NY",
+    "interests": ["music", "food", "places with foosball and pinball"],
     "budget_min": null,
-    "budget_max": 20.0
+    "budget_max": 50.0
   },
   "user_fidi_nyc": {
-    "user_id": "user_1762676791163_bao1n2b7p",
-    "location": "Long Island City, NY",
-    "interests": [],
+    "user_id": "user_fidi_nyc",
+    "location": "Financial District, Manhattan, NY",
+    "interests": ["food", "entertainment", "shopping"],
     "budget_min": null,
-    "budget_max": 20.0
+    "budget_max": 100.0
   },
   "user_midtown_nyc": {
-    "user_id": "user_1762676791163_bao1n2b7p",
-    "location": "Long Island City, NY",
-    "interests": [],
+    "user_id": "user_midtown_nyc",
+    "location": "Midtown, Manhattan, NY",
+    "interests": ["comedy shows", "mediterranean food", "movies/entertainment"],
     "budget_min": null,
-    "budget_max": 20.0
+    "budget_max": 60.0
   }
 }
