@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 
 from agents.orchestrator import AgentOrchestrator
-from agents.tools.preferences import get_user_preferences, update_user_preferences
+from agents.tools.preferences import get_user_preferences, update_user_preferences, get_all_user_ids
 from agents.tools.scraper import scrape_activities
 from services.activity_fetcher import fetch_activities
 
@@ -50,6 +50,16 @@ async def chat_endpoint(chat_message: ChatMessage):
             response=result["response"],
             tool_results=result.get("tool_results", [])
         )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/users")
+async def list_users():
+    """List all user IDs from preferences file"""
+    try:
+        user_ids = get_all_user_ids()
+        return {"users": user_ids}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

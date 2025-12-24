@@ -37,6 +37,15 @@ export interface UserPreferences {
 }
 
 export const api = {
+  async getAllUsers(): Promise<string[]> {
+    const response = await fetch(`${API_BASE_URL}/users`);
+    if (!response.ok) {
+      throw new Error(`Get All Users API error: ${response.statusText}`);
+    }
+    const data = await response.json();
+    return data.users || [];
+  },
+
   async chat(
     message: string,
     user_id: string = "default",

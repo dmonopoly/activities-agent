@@ -121,7 +121,7 @@ The frontend will be available at `http://localhost:3000`
    - Example: "Find me outdoor activities in San Francisco"
    - Example: "Show me date ideas under $50"
 
-2. **Set Preferences**: Go to Preferences page to set your location, interests, and budget
+2. **Set Preferences**: Go to Preferences page to set your location, interests, and budget. There are predefined user preferences templates; you must choose one as the current user.
 
 3. **Browse Activities**: Visit the Activities page to see a gallery of activities with a collapsible assistant
 
@@ -146,6 +146,7 @@ activities-agent/
 │   │   ├── orchestrator.py  # Main agent orchestrator, acts as MCP client to call tools, stores tool list
 │   │   └── tools/        # Tool implementations, like an MCP server providing Tool interfaces
 │   ├── api/              # API routes
+│   ├── data/             # Data to store a set of user preferences and chat histories that can be selected between
 │   ├── docs/             # Documentation, including Backend Architecture
 │   ├── models/           # Data models
 │   ├── tests/            # Integration tests

@@ -25,6 +25,17 @@ def _save_preferences(prefs: Dict[str, Dict[str, Any]]):
         json.dump(prefs, f, indent=2)
 
 
+def get_all_user_ids() -> list:
+    """
+    Get all user IDs from the preferences file
+    
+    Returns:
+        List of user IDs
+    """
+    prefs = _load_preferences()
+    return list(prefs.keys())
+
+
 def get_user_preferences(user_id: str) -> Dict[str, Any]:
     """
     Get user preferences
