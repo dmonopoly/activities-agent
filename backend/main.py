@@ -26,9 +26,14 @@ extra_origins = os.getenv("CORS_ORIGINS", "")
 if extra_origins:
     cors_origins.extend([origin.strip() for origin in extra_origins.split(",") if origin.strip()])
 
+# Regex to match Vercel preview deployment URLs
+# Matches: https://activities-agent-frontend-*.vercel.app
+vercel_preview_regex = r"https://activities-agent-frontend.*\.vercel\.app"
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
+    allow_origin_regex=vercel_preview_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
