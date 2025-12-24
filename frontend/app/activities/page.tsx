@@ -11,7 +11,7 @@ export default function ActivitiesPage() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [chatOpen, setChatOpen] = useState(false);
-  const [query, setQuery] = useState('date ideas');
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     const id = localStorage.getItem('userId') || '';

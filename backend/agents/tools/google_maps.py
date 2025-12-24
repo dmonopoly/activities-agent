@@ -1,8 +1,14 @@
 """Google Maps Places tool - MCP-style tool for finding date activities using Google Maps"""
 import googlemaps
+import math
 import os
+import random
 
+from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional, Tuple
+
+from agents.config import ENABLE_GOOGLE_MAPS_API
+from agents.mock_data import MOCK_TRANSIT_STOPS, MOCK_PLACES
 
 try:
     from agents.tools.weather import get_weather_for_location
@@ -10,12 +16,129 @@ except ImportError:
     get_weather_for_location = None
 
 NUM_METERS_PER_MILE = 1609.34
+CLUSTER_THRESHOLD_MILES = 2.0  # Aggressive clustering: merge stops within 2 miles
+
+
+@dataclass
+class SearchPoint:
+    """A geographic point to search around for activities."""
+    name: str
+    lat: float
+    lng: float
+    type: str  # "origin" | "midpoint" | "transit" | "clustered_stops" | "mock"
+    stop_count: Optional[int] = None  # Only for clustered_stops
+    original_stops: Optional[List[str]] = None  # Only for clustered_stops
+    
+    @classmethod
+    def from_dict(cls, d: Dict[str, Any]) -> "SearchPoint":
+        """Create from a dict (e.g., transit stop data)."""
+        return cls(
+            name=d.get("name", "Unknown"),
+            lat=d["lat"],
+            lng=d["lng"],
+            type=d.get("type", "unknown"),
+            stop_count=d.get("stop_count"),
+            original_stops=d.get("original_stops")
+        )
+    
+    def to_summary(self) -> Dict[str, str]:
+        return {"name": self.name, "type": self.type}
+
+
+def _haversine_distance(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    """Calculate distance between two coordinates in miles using Haversine formula"""
+    R = 3959  # Earth's radius in miles
+    
+    lat1_rad = math.radians(lat1)
+    lat2_rad = math.radians(lat2)
+    delta_lat = math.radians(lat2 - lat1)
+    delta_lng = math.radians(lng2 - lng1)
+    
+    a = math.sin(delta_lat / 2) ** 2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lng / 2) ** 2
+    c = 2 * math.asin(math.sqrt(a))  # Classic Haversine: 2 * arcsin(√a)
+    
+    return R * c
+
 
 def _calculate_midpoint(lat1: float, lng1: float, lat2: float, lng2: float) -> Tuple[float, float]:
     """Calculate midpoint between two coordinates"""
     mid_lat = (lat1 + lat2) / 2
     mid_lng = (lng1 + lng2) / 2
     return (mid_lat, mid_lng)
+
+
+def _cluster_nearby_stops(
+    stops: List[Dict[str, Any]],
+    threshold_miles: float = CLUSTER_THRESHOLD_MILES
+) -> List[SearchPoint]:
+    """
+    Cluster nearby transit stops to reduce API calls.
+    
+    Args:
+        stops: List of stop dicts with lat, lng, name, type
+        threshold_miles: Max distance to cluster stops (default: 2 miles)
+        
+    Returns:
+        List of SearchPoints (fewer than input if clustering occurred)
+    """
+    if not stops:
+        return []
+    
+    if len(stops) == 1:
+        return [SearchPoint.from_dict(stops[0])]
+    
+    clustered: List[SearchPoint] = []
+    used = set()
+    
+    for i, stop in enumerate(stops):
+        if i in used:
+            continue
+        
+        # Start a new cluster with this stop
+        cluster = [stop]
+        used.add(i)
+        
+        # Find all nearby stops to add to this cluster
+        for j, other_stop in enumerate(stops):
+            if j in used:
+                continue
+            
+            # Check distance from any stop in the current cluster
+            is_nearby = False
+            for cluster_stop in cluster:
+                distance = _haversine_distance(
+                    cluster_stop["lat"], cluster_stop["lng"],
+                    other_stop["lat"], other_stop["lng"]
+                )
+                if distance <= threshold_miles:
+                    is_nearby = True
+                    break
+            
+            if is_nearby:
+                cluster.append(other_stop)
+                used.add(j)
+        
+        # Create a single search point for this cluster
+        if len(cluster) == 1:
+            clustered.append(SearchPoint.from_dict(cluster[0]))
+        else:
+            # Multiple stops: calculate centroid
+            avg_lat = sum(s["lat"] for s in cluster) / len(cluster)
+            avg_lng = sum(s["lng"] for s in cluster) / len(cluster)
+            names = [s["name"] for s in cluster]
+            combined_name = f"Cluster: {', '.join(names[:3])}" + (f" +{len(names)-3} more" if len(names) > 3 else "")
+            
+            clustered.append(SearchPoint(
+                name=combined_name,
+                lat=avg_lat,
+                lng=avg_lng,
+                type="clustered_stops",
+                stop_count=len(cluster),
+                original_stops=names
+            ))
+    
+    print(f"[GMAPS] Clustering: {len(stops)} stops -> {len(clustered)} search points (threshold: {threshold_miles}mi)")
+    return clustered
 
 
 def _geocode_location(gmaps_client: googlemaps.Client, location: str) -> Optional[Dict[str, Any]]:
@@ -57,10 +180,8 @@ def _analyze_reviews(reviews: List[Dict[str, Any]], user_interests: Optional[Lis
     if user_interests:
         for interest in user_interests:
             interest_lower = interest.lower()
-            # Check if interest appears in review text
             if interest_lower in all_text:
                 interest_matches.append(interest)
-            # Also check for related keywords
             interest_keywords = {
                 "outdoor": ["outdoor", "park", "hiking", "nature", "trail", "scenic"],
                 "art": ["art", "gallery", "museum", "exhibition", "creative"],
@@ -75,7 +196,6 @@ def _analyze_reviews(reviews: List[Dict[str, Any]], user_interests: Optional[Lis
                         interest_matches.append(interest)
                         break
     
-    # Create summary
     summary_parts = []
     if unique_indicators:
         summary_parts.append(f"Reviewers mention: {', '.join(unique_indicators[:3])}")
@@ -86,6 +206,26 @@ def _analyze_reviews(reviews: List[Dict[str, Any]], user_interests: Optional[Lis
         "summary": ". ".join(summary_parts) if summary_parts else "No specific insights from reviews",
         "unique_indicators": unique_indicators,
         "interest_matches": list(set(interest_matches))
+    }
+
+
+def _make_response(
+    activities: List[Dict[str, Any]],
+    location1: str,
+    location2: Optional[str],
+    search_mode: str,
+    search_points: List[SearchPoint],
+    error: Optional[str] = None
+) -> Dict[str, Any]:
+    """Create a standardized response dict with consistent keys."""
+    return {
+        "activities": activities,
+        "count": len(activities),
+        "location1": location1,
+        "location2": location2,
+        "search_mode": search_mode,
+        "search_points": [sp.to_summary() for sp in search_points],
+        "error": error
     }
 
 
@@ -104,26 +244,39 @@ def get_transit_stops_between(
         location_b: Second location (address or coordinates as "lat,lng")
         
     Returns:
-        Dictionary with list of transit stops and metadata:
-        {
-            "stops": [{"name": str, "lat": float, "lng": float, "type": str}, ...],
-            "location_a": str,
-            "location_b": str,
-            "error": str (optional)
-        }
+        Dictionary with list of transit stops and metadata
     """
+    print(f"[GMAPS] get_transit_stops_between called: location_a={location_a}, location_b={location_b}")
+    print(f"[GMAPS] ENABLE_GOOGLE_MAPS_API={ENABLE_GOOGLE_MAPS_API}")
+    
+    if not ENABLE_GOOGLE_MAPS_API:
+        num_stops = random.randint(3, 6)
+        mock_stops = random.sample(MOCK_TRANSIT_STOPS, min(num_stops, len(MOCK_TRANSIT_STOPS)))
+        print(f"[GMAPS] ❌ API DISABLED - returning MOCK transit stops")
+        print(f"[GMAPS] Mock response: {len(mock_stops)} stops - {[s['name'] for s in mock_stops]}")
+        return {
+            "stops": mock_stops,
+            "location_a": location_a,
+            "location_b": location_b,
+            "stop_count": len(mock_stops),
+            "error": None
+        }
+    
+    print(f"[GMAPS] ✅ API ENABLED - calling Google Maps Directions API")
     api_key = os.getenv("GOOGLE_MAPS_API_KEY")
     
     if not api_key:
         return {
-            "error": "GOOGLE_MAPS_API_KEY not set. Please set it in your .env file.",
-            "stops": []
+            "stops": [],
+            "location_a": location_a,
+            "location_b": location_b,
+            "stop_count": 0,
+            "error": "GOOGLE_MAPS_API_KEY not set. Please set it in your .env file."
         }
     
     try:
         gmaps = googlemaps.Client(key=api_key)
         
-        # Get transit directions
         directions_result = gmaps.directions(
             origin=location_a,
             destination=location_b,
@@ -132,13 +285,15 @@ def get_transit_stops_between(
         
         if not directions_result:
             return {
-                "error": f"No transit route found between {location_a} and {location_b}",
-                "stops": []
+                "stops": [],
+                "location_a": location_a,
+                "location_b": location_b,
+                "stop_count": 0,
+                "error": f"No transit route found between {location_a} and {location_b}"
             }
         
-        # Extract stops from the route
         stops = []
-        seen_stops = set()  # Track unique stops by name
+        seen_stops = set()
         
         route = directions_result[0]
         legs = route.get("legs", [])
@@ -147,13 +302,11 @@ def get_transit_stops_between(
             steps = leg.get("steps", [])
             
             for step in steps:
-                # Only process transit steps
                 if step.get("travel_mode") != "TRANSIT":
                     continue
                 
                 transit_details = step.get("transit_details", {})
                 
-                # Get departure stop
                 departure_stop = transit_details.get("departure_stop", {})
                 if departure_stop:
                     stop_name = departure_stop.get("name", "")
@@ -170,7 +323,6 @@ def get_transit_stops_between(
                             "line_name": line.get("short_name") or line.get("name", "")
                         })
                 
-                # Get arrival stop
                 arrival_stop = transit_details.get("arrival_stop", {})
                 if arrival_stop:
                     stop_name = arrival_stop.get("name", "")
@@ -191,13 +343,17 @@ def get_transit_stops_between(
             "stops": stops,
             "location_a": location_a,
             "location_b": location_b,
-            "stop_count": len(stops)
+            "stop_count": len(stops),
+            "error": None
         }
         
     except Exception as e:
         return {
-            "error": f"Error getting transit stops: {str(e)}",
-            "stops": []
+            "stops": [],
+            "location_a": location_a,
+            "location_b": location_b,
+            "stop_count": 0,
+            "error": f"Error getting transit stops: {str(e)}"
         }
 
 
@@ -218,103 +374,131 @@ def search_places_for_dates(
     - For two locations: tries transit stops first (great for cities like NYC, SF, Chicago),
       falls back to midpoint if no transit available (car-centric areas)
     - For one location: searches near that location
+    - Clusters nearby stops (within 2mi) to reduce API calls
     
     Args:
         location1: First location (address or coordinates as "lat,lng")
         location2: Second location (optional - if not provided, searches near location1)
         place_types: List of place types (e.g., ["cafe", "restaurant", "park", "tourist_attraction"])
-        price_level: Max price level filter (0-4, where 0=Free, 1=Inexpensive, 2=Moderate, 3=Expensive, 4=Very Expensive)
-        min_rating: Minimum rating threshold (default: 4.0, scale: 1.0-5.0)
-        radius: Search radius in miles per search point (default: 0.5mi for transit stops, auto-expanded for midpoint)
+        price_level: Max price level filter (0-4)
+        min_rating: Minimum rating threshold (default: 4.0)
+        radius: Search radius in miles per search point (default: 0.5mi)
         check_weather: Boolean to include weather info for outdoor activities
-        user_interests: List of interests for review matching (e.g., ["outdoor", "art", "coffee"])
+        user_interests: List of interests for review matching
         
     Returns:
-        Dictionary with list of activities and metadata including search_mode used
+        Standardized dict with: activities, count, location1, location2, search_mode, search_points, error
     """
+    print(f"[GMAPS] search_places_for_dates called: location1={location1}, location2={location2}, place_types={place_types}, radius={radius}mi")
+    print(f"[GMAPS] ENABLE_GOOGLE_MAPS_API={ENABLE_GOOGLE_MAPS_API}")
+    
+    # Default place types
+    if not place_types:
+        place_types = ["cafe", "restaurant", "park", "tourist_attraction"]
+    
+    # --- Mock response path ---
+    if not ENABLE_GOOGLE_MAPS_API:
+        num_places = random.randint(3, 6)
+        mock_activities = [p.copy() for p in random.sample(MOCK_PLACES, min(num_places, len(MOCK_PLACES)))]
+        for activity in mock_activities:
+            activity["near_stop"] = location1
+        print(f"[GMAPS] ❌ API DISABLED - returning MOCK places")
+        print(f"[GMAPS] Mock response: {len(mock_activities)} places - {[a['name'] for a in mock_activities]}")
+        
+        mock_search_points = [SearchPoint(name=location1, lat=0.0, lng=0.0, type="mock")]
+        return _make_response(
+            activities=mock_activities,
+            location1=location1,
+            location2=location2,
+            search_mode="mock",
+            search_points=mock_search_points
+        )
+    
+    # --- Real API path ---
+    print(f"[GMAPS] ✅ API ENABLED - calling Google Maps Places API")
     api_key = os.getenv("GOOGLE_MAPS_API_KEY")
     
     if not api_key:
-        return {
-            "error": "GOOGLE_MAPS_API_KEY not set. Please set it in your .env file.",
-            "activities": []
-        }
+        return _make_response(
+            activities=[],
+            location1=location1,
+            location2=location2,
+            search_mode="error",
+            search_points=[],
+            error="GOOGLE_MAPS_API_KEY not set. Please set it in your .env file."
+        )
     
     try:
         gmaps = googlemaps.Client(key=api_key)
-        
-        # Default place types if not provided
-        if not place_types:
-            place_types = ["cafe", "restaurant", "park", "tourist_attraction"]
-        
-        # Determine search points based on locations provided
-        search_points = []
+        search_points: List[SearchPoint] = []
         search_mode = "single_location"
+        effective_radius = radius
         
+        # --- Determine search points ---
         if location2:
-            # Two locations: try transit-aware search first, fallback to midpoint
+            # Two locations: try transit first, fallback to midpoint
             transit_result = get_transit_stops_between(location1, location2)
             
             if transit_result.get("stops") and len(transit_result["stops"]) >= 2:
-                # Transit available - use stops along the route
                 search_mode = "transit_stops"
-                search_points = [
-                    {
-                        "name": stop["name"],
-                        "lat": stop["lat"],
-                        "lng": stop["lng"],
-                        "type": stop.get("type", "TRANSIT")
-                    }
-                    for stop in transit_result["stops"]
-                ]
-                effective_radius = radius  # Use smaller radius per stop
+                # Cluster nearby stops to reduce API calls
+                search_points = _cluster_nearby_stops(transit_result["stops"], CLUSTER_THRESHOLD_MILES)
+                # Expand radius slightly for clustered points
+                effective_radius = radius * 1.5
             else:
-                # No transit - fallback to midpoint (car-centric area)
+                # No transit - fallback to midpoint
                 search_mode = "midpoint"
                 loc1_data = _geocode_location(gmaps, location1)
                 loc2_data = _geocode_location(gmaps, location2)
                 
                 if not loc1_data or not loc2_data:
-                    return {
-                        "error": f"Could not geocode locations. Location1: {location1}, Location2: {location2}",
-                        "activities": []
-                    }
+                    return _make_response(
+                        activities=[],
+                        location1=location1,
+                        location2=location2,
+                        search_mode="error",
+                        search_points=[],
+                        error=f"Could not geocode locations. Location1: {location1}, Location2: {location2}"
+                    )
                 
                 midpoint_lat, midpoint_lng = _calculate_midpoint(
                     loc1_data["lat"], loc1_data["lng"],
                     loc2_data["lat"], loc2_data["lng"]
                 )
-                search_points = [{
-                    "name": "Midpoint",
-                    "lat": midpoint_lat,
-                    "lng": midpoint_lng,
-                    "type": "midpoint"
-                }]
-                # Use larger radius for midpoint since it's a single search point
+                search_points = [SearchPoint(
+                    name="Midpoint",
+                    lat=midpoint_lat,
+                    lng=midpoint_lng,
+                    type="midpoint"
+                )]
                 effective_radius = max(radius * 4, 2.0)
         else:
             # Single location search
             loc_data = _geocode_location(gmaps, location1)
             if not loc_data:
-                return {
-                    "error": f"Could not geocode location: {location1}",
-                    "activities": []
-                }
-            search_points = [{
-                "name": loc_data["formatted_address"],
-                "lat": loc_data["lat"],
-                "lng": loc_data["lng"],
-                "type": "origin"
-            }]
+                return _make_response(
+                    activities=[],
+                    location1=location1,
+                    location2=location2,
+                    search_mode="error",
+                    search_points=[],
+                    error=f"Could not geocode location: {location1}"
+                )
+            search_points = [SearchPoint(
+                name=loc_data["formatted_address"],
+                lat=loc_data["lat"],
+                lng=loc_data["lng"],
+                type="origin"
+            )]
             effective_radius = radius
         
-        # Search for activities near each search point
+        # --- Search for activities ---
         activities = []
         seen_place_ids = set()
         
         for search_point in search_points:
-            search_lat = search_point["lat"]
-            search_lng = search_point["lng"]
+            search_lat = search_point.lat
+            search_lng = search_point.lng
             
             for place_type in place_types:
                 places_result = gmaps.places_nearby(
@@ -333,13 +517,11 @@ def search_places_for_dates(
                     if text_search.get("results"):
                         places_result = text_search
                 
-                # Limit per type per location (more for midpoint since it's single point)
                 limit = 10 if search_mode == "midpoint" else 5
                 
                 for place in places_result.get("results", [])[:limit]:
                     place_id = place.get("place_id")
                     
-                    # Deduplicate across search points
                     if place_id in seen_place_ids:
                         continue
                     seen_place_ids.add(place_id)
@@ -350,7 +532,6 @@ def search_places_for_dates(
                     if rating and rating < min_rating:
                         continue
                     
-                    # Filter by max price level (not exact match)
                     if price_level is not None and price_level_place is not None:
                         if price_level_place > price_level:
                             continue
@@ -387,14 +568,13 @@ def search_places_for_dates(
                             "gmaps_place_id": place_id,
                             "gmaps_rating": rating,
                             "gmaps_price_level": price_level_place,
-                            "near_stop": search_point["name"],
+                            "near_stop": search_point.name,
                             "coordinates": {
                                 "lat": location_coords.get("lat"),
                                 "lng": location_coords.get("lng")
                             } if location_coords else None
                         }
                         
-                        # Add weather info if requested (useful for outdoor activities)
                         if check_weather and get_weather_for_location:
                             coords = activity.get("coordinates")
                             if coords:
@@ -411,31 +591,30 @@ def search_places_for_dates(
         
         activities.sort(key=lambda x: x.get("gmaps_rating", 0) or 0, reverse=True)
         
-        result = {
-            "activities": activities,
-            "search_mode": search_mode,
-            "search_points": [{"name": sp["name"], "type": sp["type"]} for sp in search_points],
-            "location1": location1,
-            "count": len(activities)
-        }
-        
-        if location2:
-            result["location2"] = location2
-        
-        return result
+        return _make_response(
+            activities=activities,
+            location1=location1,
+            location2=location2,
+            search_mode=search_mode,
+            search_points=search_points
+        )
         
     except Exception as e:
-        return {
-            "error": f"Error searching places: {str(e)}",
-            "activities": []
-        }
+        return _make_response(
+            activities=[],
+            location1=location1,
+            location2=location2,
+            search_mode="error",
+            search_points=[],
+            error=f"Error searching places: {str(e)}"
+        )
 
 
 TOOL_DEFINITION = {
     "type": "function",
     "function": {
         "name": "search_places_for_dates",
-        "description": "Search for date activities near one location or between two locations using Google Maps. Intelligently chooses search strategy: for transit-friendly cities (NYC, SF, Chicago), searches along transit stops; for car-centric areas, searches around midpoint. Finds places like coffee shops, restaurants, parks, and attractions.",
+        "description": "Search for date activities near one location or between two locations using Google Maps. Intelligently chooses search strategy: for transit-friendly cities (NYC, SF, Chicago), searches along transit stops (clustered to reduce API calls); for car-centric areas, searches around midpoint. Finds places like coffee shops, restaurants, parks, and attractions.",
         "parameters": {
             "type": "object",
             "properties": {
@@ -478,4 +657,3 @@ TOOL_DEFINITION = {
         }
     }
 }
-

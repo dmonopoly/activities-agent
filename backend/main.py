@@ -1,4 +1,5 @@
 """Main FastAPI application"""
+import os
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -13,10 +14,21 @@ from api.routes import router
 
 app = FastAPI(title="Activities Agent API", version="1.0.0")
 
-# CORS configuration
+# CORS configuration - allow local dev and production origins
+cors_origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://activitiesagent.vercel.app",
+]
+
+# Add any additional origins from environment variable
+extra_origins = os.getenv("CORS_ORIGINS", "")
+if extra_origins:
+    cors_origins.extend([origin.strip() for origin in extra_origins.split(",") if origin.strip()])
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # Next.js default port
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

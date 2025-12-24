@@ -13,6 +13,81 @@ interface ActivityChatProps {
   userId?: string;
 }
 
+const SendIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="w-5 h-5"
+  >
+    <path d="M12 19V5M5 12l7-7 7 7" />
+  </svg>
+);
+
+interface ChatInputProps {
+  input: string;
+  setInput: (value: string) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  loading: boolean;
+  containerClassName?: string;
+  formClassName?: string;
+}
+
+const ChatInput = ({ input, setInput, onSubmit, loading, containerClassName = '', formClassName = '' }: ChatInputProps) => {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+    }
+  }, [input]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Send on Enter (without Shift), but allow Shift+Enter for new line
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (input.trim() && !loading) {
+        onSubmit(e);
+      }
+    }
+  };
+
+  return (
+    <div className={containerClassName}>
+      <form onSubmit={onSubmit} className={formClassName}>
+        <div className="relative max-w-3xl mx-auto">
+          <textarea
+            ref={textareaRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask about activities..."
+            className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-3xl focus:outline-none focus:ring-2 focus:ring-rose-500 shadow-sm resize-none overflow-hidden min-h-[48px] max-h-[200px] leading-6"
+            disabled={loading}
+            rows={1}
+          />
+          <button
+            type="submit"
+            disabled={loading || !input.trim()}
+            className={`absolute right-2 bottom-2 p-2 rounded-full bg-rose-500 text-white hover:bg-rose-600 disabled:opacity-0 disabled:pointer-events-none transition-all duration-200 shadow-sm hover:shadow-md ${
+              input.trim() ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            }`}
+            aria-label="Send message"
+          >
+            <SendIcon />
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
 export default function ActivityChat({ userId = 'default' }: ActivityChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -116,42 +191,13 @@ export default function ActivityChat({ userId = 'default' }: ActivityChatProps) 
             </div>
 
             {/* Input Form - Positioned higher */}
-            <div className="w-full px-6 pb-6">
-              <form onSubmit={handleSend}>
-                <div className="relative max-w-3xl mx-auto">
-                  <input
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder="Ask about activities..."
-                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-rose-500 shadow-sm"
-                    disabled={loading}
-                  />
-                  <button
-                    type="submit"
-                    disabled={loading || !input.trim()}
-                    className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-rose-500 text-white hover:bg-rose-600 disabled:opacity-0 disabled:pointer-events-none transition-all duration-200 shadow-sm hover:shadow-md ${
-                      input.trim() ? 'opacity-100' : 'opacity-0 pointer-events-none'
-                    }`}
-                    aria-label="Send message"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="w-5 h-5"
-                    >
-                      <path d="m22 2-7 20-4-9-9-4Z" />
-                      <path d="M22 2 11 13" />
-                    </svg>
-                  </button>
-                </div>
-              </form>
-            </div>
+            <ChatInput
+              input={input}
+              setInput={setInput}
+              onSubmit={handleSend}
+              loading={loading}
+              containerClassName="w-full px-6 pb-6"
+            />
           </div>
         </>
       ) : (
@@ -191,42 +237,14 @@ export default function ActivityChat({ userId = 'default' }: ActivityChatProps) 
           </div>
 
           {/* Input Container - Sticky at bottom when messages exist */}
-          <div className="sticky bottom-0 border-t border-gray-200 bg-white z-10">
-            <form onSubmit={handleSend} className="p-4">
-              <div className="relative max-w-3xl mx-auto">
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask about activities..."
-                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-rose-500 shadow-sm"
-                  disabled={loading}
-                />
-                <button
-                  type="submit"
-                  disabled={loading || !input.trim()}
-                  className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-rose-500 text-white hover:bg-rose-600 disabled:opacity-0 disabled:pointer-events-none transition-all duration-200 shadow-sm hover:shadow-md ${
-                    input.trim() ? 'opacity-100' : 'opacity-0 pointer-events-none'
-                  }`}
-                  aria-label="Send message"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="w-5 h-5"
-                  >
-                    <path d="m22 2-7 20-4-9-9-4Z" />
-                    <path d="M22 2 11 13" />
-                  </svg>
-                </button>
-              </div>
-            </form>
-          </div>
+          <ChatInput
+            input={input}
+            setInput={setInput}
+            onSubmit={handleSend}
+            loading={loading}
+            containerClassName="sticky bottom-0 border-t border-gray-200 bg-white z-10"
+            formClassName="p-4"
+          />
         </>
       )}
     </div>

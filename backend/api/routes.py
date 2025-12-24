@@ -22,6 +22,7 @@ class ChatMessage(BaseModel):
 class ChatResponse(BaseModel):
     response: str
     tool_results: List[Dict[str, Any]] = []
+    skipped_tools_message: Optional[str] = None
 
 
 class PreferencesUpdate(BaseModel):
@@ -47,10 +48,14 @@ async def chat_endpoint(chat_message: ChatMessage):
         result = agent.process_message(chat_message.message)
         print(f"[DEBUG][/chat] Result: {result}")
         return ChatResponse(
-            response=result["response"],
-            tool_results=result.get("tool_results", [])
+            response=result.get("response") or "I couldn't generate a response.",
+            tool_results=result.get("tool_results", []),
+            skipped_tools_message=result.get("skipped_tools_message")
         )
     except Exception as e:
+        import traceback
+        print(f"[ERROR][/chat] Exception: {type(e).__name__}: {e}")
+        print(f"[ERROR][/chat] Traceback:\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

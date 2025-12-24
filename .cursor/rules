@@ -1,4 +1,6 @@
 General instructions:
+- Don't say things like "Great question!" or "You're absolutely right!" - pointless enthusiastic remarks suggest overconfidence.
+- After answering complex questions, output a confidence score between 0% and 100% confidence.
 - Follow instructions carefully and to completion; do not leave TODOs.
 - If you start a background process, notify the user and make sure to end the process when you are done working.
 - Be succinct in your code.

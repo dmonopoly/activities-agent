@@ -1,8 +1,12 @@
 """Weather tool - MCP-style tool for getting weather information"""
 from typing import Dict, Any, Optional
+import random
 import requests
 import os
 from datetime import datetime
+
+from agents.config import ENABLE_WEATHER_API
+from agents.mock_data import MOCK_WEATHER_RESPONSES
 
 
 def get_weather_for_location(location: str, date: Optional[str] = None) -> Dict[str, Any]:
@@ -16,6 +20,19 @@ def get_weather_for_location(location: str, date: Optional[str] = None) -> Dict[
     Returns:
         Dictionary with weather data (temperature, conditions, precipitation, etc.)
     """
+    print(f"[WEATHER] get_weather_for_location called: location={location}, date={date}")
+    print(f"[WEATHER] ENABLE_WEATHER_API={ENABLE_WEATHER_API}")
+    
+    if not ENABLE_WEATHER_API:
+        mock = random.choice(MOCK_WEATHER_RESPONSES).copy()
+        mock["location"] = location  # Use the requested location
+        mock["timestamp"] = datetime.now().isoformat()
+        mock["date"] = date or datetime.now().strftime("%Y-%m-%d")
+        print(f"[WEATHER] ❌ API DISABLED - returning MOCK data")
+        print(f"[WEATHER] Mock response: temp={mock['temperature']}°F, condition={mock['condition']}, outdoor_suitable={mock['outdoor_suitable']}")
+        return mock
+    
+    print(f"[WEATHER] ✅ API ENABLED - calling OpenWeatherMap API")
     api_key = os.getenv("OPENWEATHER_API_KEY")
     
     if not api_key:
@@ -96,6 +113,7 @@ def get_weather_for_location(location: str, date: Optional[str] = None) -> Dict[
                 weather_info["outdoor_suitable"] = True
                 weather_info["outdoor_recommendation"] = "Weather is okay for outdoor activities"
         
+        print(f"[WEATHER] API response: temp={weather_info.get('temperature')}°F, condition={weather_info.get('condition')}, outdoor_suitable={weather_info.get('outdoor_suitable')}")
         return weather_info
         
     except requests.exceptions.RequestException as e:

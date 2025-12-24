@@ -11,30 +11,38 @@ def scrape_activities(
     location_b: Optional[str] = None,
     filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
     """
-    Scrape activities from the web based on query and location
+    Scrape activities from the web based on query and location(s)
     
     Args:
-        query: Search query for activities (e.g., "date ideas", "fun activities")
-        location: Location to search in (city, neighborhood, etc.)
+        query: Search query for activities
+        location_a: Primary location to search in (city, neighborhood, etc.)
+        location_b: Optional second location (for finding activities between two locations)
         filters: Optional filters (category, price_range, etc.)
         
     Returns:
-        List of activity dictionaries
+        List of activity dictionaries with fields: name, location, description, price, 
+        opening_hours, url, category
     """
     activities = []
     
     # For demo purposes, we'll scrape from a few common sources
     # In production, you'd want to use proper APIs or more sophisticated scraping
     
-    # Example: Scrape Eventbrite-style sites
-    search_terms = f"{query} {location}" if location else query
+    # Build search terms from locations
+    location_parts = [loc for loc in [location_a, location_b] if loc]
+    if location_parts:
+        search_terms = f"{query} {' '.join(location_parts)}"
+        primary_location = location_a or location_b
+    else:
+        search_terms = query
+        primary_location = "NYC"
     
     # Mock data for now - in production, implement actual scraping
     # This demonstrates the tool structure
     sample_activities = [
         {
-            "name": "Sunset Yoga in the Park",
-            "location": location or "Downtown",
+            "name": "[Stub] Sunset Yoga in the Park",
+            "location": primary_location,
             "description": "Join us for a relaxing yoga session as the sun sets",
             "price": "$25",
             "opening_hours": "This Saturday, 6:00 PM",
@@ -42,8 +50,8 @@ def scrape_activities(
             "category": "Wellness"
         },
         {
-            "name": "Art Gallery Opening",
-            "location": location or "Arts District",
+            "name": "[Stub] Art Gallery Opening",
+            "location": primary_location,
             "description": "New contemporary art exhibition with wine and cheese",
             "price": "Free",
             "opening_hours": "Friday, 7:00 PM",
@@ -51,8 +59,8 @@ def scrape_activities(
             "category": "Arts"
         },
         {
-            "name": "Cooking Class: Italian Cuisine",
-            "location": location or "Culinary School",
+            "name": "[Stub] Cooking Class: Italian Cuisine",
+            "location": primary_location,
             "description": "Learn to make fresh pasta and authentic Italian dishes",
             "price": "$75",
             "opening_hours": "Next Sunday, 2:00 PM",
@@ -60,8 +68,8 @@ def scrape_activities(
             "category": "Food & Drink"
         },
         {
-            "name": "Live Jazz Night",
-            "location": location or "Jazz Club",
+            "name": "[Stub] Live Jazz Night",
+            "location": primary_location,
             "description": "Intimate jazz performance with local musicians",
             "price": "$30",
             "opening_hours": "Saturday, 8:00 PM",
@@ -69,8 +77,8 @@ def scrape_activities(
             "category": "Music"
         },
         {
-            "name": "Hiking Trail: Mountain View",
-            "location": location or "Nature Reserve",
+            "name": "[Stub] Hiking Trail: Mountain View",
+            "location": primary_location,
             "description": "Moderate 3-mile hike with scenic overlooks",
             "price": "Free",
             "opening_hours": "Any day, sunrise to sunset",
@@ -102,17 +110,21 @@ TOOL_DEFINITION = {
     "type": "function",
     "function": {
         "name": "scrape_activities",
-        "description": "Search and scrape activities/date ideas from the web based on query, location, and optional filters",
+        "description": "Search and scrape activities from the web based on query and location(s). Can search near one location or between two locations.",
         "parameters": {
             "type": "object",
             "properties": {
                 "query": {
                     "type": "string",
-                    "description": "Search query for activities (e.g., 'date ideas', 'fun activities', 'outdoor activities')"
+                    "description": "Search query for activities (e.g., 'date ideas', 'nature', 'unique coffee shops')"
                 },
-                "location": {
+                "location_a": {
                     "type": "string",
-                    "description": "Location to search in (city, neighborhood, etc.)"
+                    "description": "Primary location to search in (city, neighborhood, etc.)"
+                },
+                "location_b": {
+                    "type": "string",
+                    "description": "Optional second location - if provided, searches for activities between location_a and location_b"
                 },
                 "filters": {
                     "type": "object",
