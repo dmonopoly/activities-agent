@@ -1,0 +1,37 @@
+{
+  "user_lic_nyc": {
+    "user_id": "user_lic_nyc",
+    "location": "Long Island City, NY",
+    "interests": [],
+    "budget_min": null,
+    "budget_max": 20.0
+  },
+  "user_dumbo_nyc": {
+    "user_id": "user_dumbo_nyc",
+    "location": "Long Island City, NY",
+    "interests": [],
+    "budget_min": null,
+    "budget_max": 20.0
+  },
+  "user_williamsburg_nyc": {
+    "user_id": "user_1762676791163_bao1n2b7p",
+    "location": "Long Island City, NY",
+    "interests": [],
+    "budget_min": null,
+    "budget_max": 20.0
+  },
+  "user_fidi_nyc": {
+    "user_id": "user_1762676791163_bao1n2b7p",
+    "location": "Long Island City, NY",
+    "interests": [],
+    "budget_min": null,
+    "budget_max": 20.0
+  },
+  "user_midtown_nyc": {
+    "user_id": "user_1762676791163_bao1n2b7p",
+    "location": "Long Island City, NY",
+    "interests": [],
+    "budget_min": null,
+    "budget_max": 20.0
+  }
+}
