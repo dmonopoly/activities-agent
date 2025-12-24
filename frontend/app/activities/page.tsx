@@ -56,6 +56,12 @@ export default function ActivitiesPage() {
               Activities Agent
             </Link>
             <nav className="flex gap-6">
+              <Link href="/" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+                New Chat
+              </Link>
+              <Link href="/history" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+                Chat History
+              </Link>
               <Link href="/activities" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
                 Browse Activities
               </Link>
