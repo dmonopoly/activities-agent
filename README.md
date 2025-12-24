@@ -1,12 +1,12 @@
 # Overview
 
-An AI-powered agent system for discovering personalized activities and social event ideas. Built with Next.js, Python FastAPI, and OpenRouter LLM integration.
+An agentic system for discovering personalized activities and social event ideas. Built with Next.js, Python FastAPI, and OpenRouter LLM integration.
 
-The core focus initial focus is to recommend activities between two locations to help two people who live in different areas to easily meet.
+The core initial focus is to recommend activities between two locations to help two people who live in different areas to easily meet.
 
 ## Features
 
-- 🤖 **AI Agent**: Conversational agent that understands your preferences and finds activities
+- 🤖 **AI Agent**: Conversational agent that understands your preferences and finds activities, executing tool calls as needed
 - 🔍 **Web Scraping**: Scrapes activity websites to find fun things to do
 - 📊 **Google Sheets Integration**: Export activities to Google Sheets
 - 💬 **Chat Interface**: Modern chat UI using assistant-ui.com patterns
