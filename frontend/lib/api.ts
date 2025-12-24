@@ -1,7 +1,28 @@
 /**
  * API client for backend communication
  */
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+function getApiBaseUrl(): string {
+  // 1. Explicit API URL - set this in Vercel for production only
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+
+  // 2. Vercel preview deployment - derive backend URL from frontend URL
+  // Frontend: activities-agent-frontend-git-{branch}-{owner}.vercel.app
+  // Backend:  activities-agent-api-git-{branch}-{owner}.vercel.app
+  if (process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview' && process.env.NEXT_PUBLIC_VERCEL_URL) {
+    const backendUrl = process.env.NEXT_PUBLIC_VERCEL_URL.replace(
+      'activities-agent-frontend',
+      'activities-agent-api'
+    );
+    return `https://${backendUrl}/api`;
+  }
+
+  // 3. Local development fallback
+  return 'http://localhost:8000/api';
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 export interface ChatMessage {
   message: string;
