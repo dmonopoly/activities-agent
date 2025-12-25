@@ -2,11 +2,19 @@ General instructions:
 - Don't say things like "Great question!" or "You're absolutely right!" - pointless enthusiastic remarks suggest overconfidence.
 - After answering complex questions, output a confidence score between 0% and 100% confidence.
 - Follow instructions carefully and to completion; do not leave TODOs.
-- If you start a background process, notify the user and make sure to end the process when you are done working.
-- Be succinct in your code.
-- Keep comments to a minimum. Only include a comment if there is an unusual edge case.
+- Focus on clean, concise code.
+- Do not put comments (only include a comment if there is an unusual edge case).
+- Follow proper casing rules
 - When adding tests:
   - Check existing tests so you avoid writing duplicates.
   - Test the bare minimum necessary.
   - Factor out commonly reused parts in tests (when there are at least 3 usages).
 - Read the first few paragraphs of README.md so you understand the high-level goal of the project.
+- If you think there might not be a correct answer, say so. If you do not know the answer, say so instead of guessing.
+- Always write correct, up to date, bug free, fully functional and working, secure, performant and efficient code
+- **CRITICAL: Process Management**: When you start any background process, server, or long-running command (e.g., `cargo run`, `npm start`, servers, test containers), you MUST:
+  1. Track it explicitly in your response (e.g., "Started server in background")
+  2. Stop it BEFORE completing your response or when the user's request is fulfilled
+  3. Use `pkill`, `kill`, or appropriate termination commands to clean up
+  4. Verify the process is stopped with a check command
+  5. Exception: Only leave processes running if the user explicitly requests it or if it's part of an ongoing workflow they're managing
