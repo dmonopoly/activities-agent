@@ -15,6 +15,7 @@ function getApiBaseUrl(): string {
       'activities-agent-frontend',
       'activities-agent-api'
     );
+    console.log("Preview Mode detected; backend URL:", backendUrl);
     return `https://${backendUrl}/api`;
   }
 
