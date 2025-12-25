@@ -92,7 +92,7 @@ export default function ActivitiesPage() {
               </div>
             ) : activities.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">No activities found. Try a different search!</p>
+                <p className="text-gray-500 text-lg">No activities found</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
