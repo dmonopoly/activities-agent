@@ -45,15 +45,15 @@ The core initial focus is to recommend activities between two locations to help 
 
 ### Backend Setup
 
-1. Navigate to backend directory:
-```bash
-cd backend
-```
-
-2. Create virtual environment:
+1. Create virtual environment in root dir (not in backend/, so IDE can connect imports correctly):
 ```bash
 python3 -m venv venv
 source venv/bin/activate
+```
+
+2. Navigate to backend directory:
+```bash
+cd backend
 ```
 
 3. Install dependencies:
