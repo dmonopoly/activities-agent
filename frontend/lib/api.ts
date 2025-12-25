@@ -10,10 +10,13 @@ function getApiBaseUrl(): string {
   // 2. Vercel preview deployment - derive backend URL from frontend URL
   // Frontend: activities-agent-frontend-git-{branch}-{owner}.vercel.app
   // Backend:  activities-agent-api-git-{branch}-{owner}.vercel.app
-  if (process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview' && process.env.NEXT_PUBLIC_VERCEL_URL) {
-    const backendUrl = process.env.NEXT_PUBLIC_VERCEL_URL.replace(
-      'activities-agent-frontend',
-      'activities-agent-api'
+  if (
+    process.env.NEXT_PUBLIC_VERCEL_ENV === "preview" &&
+    process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL
+  ) {
+    const backendUrl = process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL.replace(
+      "activities-agent-frontend",
+      "activities-agent-api"
     );
     console.log("Preview Mode detected; backend URL:", backendUrl);
     return `https://${backendUrl}/api`;
