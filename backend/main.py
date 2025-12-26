@@ -14,32 +14,29 @@ from api.routes import router
 
 app = FastAPI(title="Activities Agent API", version="1.0.0")
 
-# CORS configuration - allow local dev and production origins
+
+PRODUCTION_URL = "https://activitiesagent.vercel.app"
+VERCEL_PREVIEW_REGEX = r"https://activities-agent-frontend-*\.vercel\.app"
+
 cors_origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://activitiesagent.vercel.app",
+    PRODUCTION_URL,
 ]
 
-# Add any additional origins from environment variable
 extra_origins = os.getenv("CORS_ORIGINS", "")
 if extra_origins:
     cors_origins.extend([origin.strip() for origin in extra_origins.split(",") if origin.strip()])
 
-# Regex to match Vercel preview deployment URLs
-# Matches: https://activities-agent-frontend-*.vercel.app
-vercel_preview_regex = r"https://activities-agent-frontend.*\.vercel\.app"
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
-    allow_origin_regex=vercel_preview_regex,
+    allow_origin_regex=VERCEL_PREVIEW_REGEX,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include routes
 app.include_router(router, prefix="/api", tags=["api"])
 
 
