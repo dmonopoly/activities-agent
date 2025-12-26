@@ -16,7 +16,7 @@ app = FastAPI(title="Activities Agent API", version="1.0.0")
 
 
 PRODUCTION_URL = "https://activitiesagent.vercel.app"
-VERCEL_PREVIEW_REGEX = r"https://activities-agent-frontend-*\.vercel\.app"
+VERCEL_PREVIEW_REGEX = r"https://activities-agent-frontend-.*\.vercel\.app"
 
 cors_origins = [
     "http://localhost:3000",
