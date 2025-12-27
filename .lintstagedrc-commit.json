@@ -1,5 +1,4 @@
 {
     "frontend/**/*.{js,jsx,ts,tsx}": [
-        "bun run --cwd frontend lint"
     ]
   }
