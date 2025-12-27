@@ -1,5 +1,6 @@
 {
-"frontend/**/*.{js,jsx,ts,tsx}": [
-    "eslint --max-warnings=0"
-]
+    "frontend/**/*.{js,jsx,ts,tsx}": [
+        "eslint --max-warnings=0",
+        "bun run --cwd frontend build"
+    ]
 }

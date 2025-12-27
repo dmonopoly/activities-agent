@@ -1,3 +1,7 @@
 echo "Running pre-push checks..."
-bunx lint-staged --config .lintstagedrc-push.json
-cd frontend && bun run build
+
+# Doesn't do anything, pre-push is for staged files...
+# bunx lint-staged --config .lintstagedrc-push.json
+
+cd frontend
+bun run build
