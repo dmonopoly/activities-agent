@@ -1,5 +1,5 @@
 echo "Running lint-staged checks..."
-cd frontend/
+
 bunx lint-staged --concurrent false --verbose
 
 echo "Running build..."
