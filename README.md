@@ -226,9 +226,12 @@ pytest tests/ -v -s
 - `OPENROUTER_API_KEY`: Your OpenRouter API key
 - `GOOGLE_MAPS_API_KEY`: (Optional) Google Maps API key for Places API integration. Get one at [Google Cloud Console](https://console.cloud.google.com/). Enable Places API and Geocoding API.
 - `OPENWEATHER_API_KEY`: (Optional) OpenWeatherMap API key for weather information. Get one at [OpenWeatherMap](https://openweathermap.org/api). Free tier: 60 calls/minute.
+- `PREVIEW_API_TOKEN`: (Preview deployments only) Shared secret required by the backend for all `/api/*` requests when `VERCEL_ENV=preview`. This is injected by the Next.js server-side proxy so it never reaches the browser.
 
 ### Frontend (.env.local)
 - `NEXT_PUBLIC_API_URL`: Backend API URL (default: http://localhost:8000/api)
+ - `BACKEND_API_URL`: (Optional, server-side) Full backend API base URL including `/api`, e.g. `https://activities-agent-api.vercel.app/api`. If unset, previews derive it from `VERCEL_BRANCH_URL`, and local dev defaults to `http://localhost:8000/api`.
+ - `PREVIEW_API_TOKEN`: (Preview deployments only, server-side) Must match backend `PREVIEW_API_TOKEN`. Used only by the Next.js proxy route.
 
 ## License
 
