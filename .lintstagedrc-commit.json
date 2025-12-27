@@ -1,0 +1,5 @@
+{
+    "frontend/**/*.{js,jsx,ts,tsx}": [
+        "bun run --prefix frontend lint"
+    ]
+  }

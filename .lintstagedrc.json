@@ -1,6 +1,0 @@
-{
-    "frontend/**/*.{js,jsx,ts,tsx}": [
-      "bun --prefix frontend run lint",
-      "bun --prefix frontend test -- --watchAll=false --findRelatedTests"
-    ]
-  }

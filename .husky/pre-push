@@ -1,9 +1,2 @@
-echo "Running lint-staged checks..."
-
-bunx lint-staged --concurrent false --verbose
-
-echo "Running build..."
-bun run build
-
-# echo "Running tests..."
-# bun run test
+echo "Running lint-staged checks from pre-push hook..."
+bunx lint-staged --config .lintstagedrc-push.json --concurrent false --verbose

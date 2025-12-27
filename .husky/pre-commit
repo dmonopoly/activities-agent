@@ -1,1 +1,2 @@
-# bun test frontend/
+echo "Running pre-commit hook..."
+bunx lint-staged --config .lintstagedrc-commit.json
