@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { api, Activity } from '@/lib/api';
 import ActivityCard from '@/components/ui/ActivityCard';
-import ActivityChat from '@/components/chat/ActivityChat';
 import Header from '@/components/ui/Header';
+import ActivityChat from '@/components/chat/ActivityChat';
 
 export default function ActivitiesPage() {
   const [userId, setUserId] = useState<string>('');

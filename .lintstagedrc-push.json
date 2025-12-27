@@ -1,6 +1,6 @@
 {
     "frontend/**/*.{js,jsx,ts,tsx}": [
-        "bun run --prefix frontend lint",
-        "bun run --prefix frontend build"
+        "bun run --cwd frontend lint",
+        "bun run --cwd frontend build"
     ]
   }
