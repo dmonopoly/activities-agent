@@ -1,0 +1,8 @@
+echo "Running lint-staged checks..."
+bunx lint-staged --concurrent false --verbose
+
+echo "Running build..."
+bun run build
+
+echo "Running tests..."
+bun run test
