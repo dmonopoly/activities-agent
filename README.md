@@ -45,15 +45,15 @@ The core initial focus is to recommend activities between two locations to help 
 
 ### Backend Setup
 
-1. Navigate to backend directory:
-```bash
-cd backend
-```
-
-2. Create virtual environment:
+1. Create virtual environment in root dir (not in backend/, so IDE can connect imports correctly):
 ```bash
 python3 -m venv venv
 source venv/bin/activate
+```
+
+2. Navigate to backend directory:
+```bash
+cd backend
 ```
 
 3. Install dependencies:
@@ -121,7 +121,7 @@ The frontend will be available at `http://localhost:3000`
    - Example: "Find me outdoor activities in San Francisco"
    - Example: "Show me date ideas under $50"
 
-2. **Set Preferences**: Go to Preferences page to set your location, interests, and budget
+2. **Set Preferences**: Go to Preferences page to set your location, interests, and budget. There are predefined user preferences templates; you must choose one as the current user.
 
 3. **Browse Activities**: Visit the Activities page to see a gallery of activities with a collapsible assistant
 
@@ -146,6 +146,7 @@ activities-agent/
 │   │   ├── orchestrator.py  # Main agent orchestrator, acts as MCP client to call tools, stores tool list
 │   │   └── tools/        # Tool implementations, like an MCP server providing Tool interfaces
 │   ├── api/              # API routes
+│   ├── data/             # Data to store a set of user preferences and chat histories that can be selected between
 │   ├── docs/             # Documentation, including Backend Architecture
 │   ├── models/           # Data models
 │   ├── tests/            # Integration tests
@@ -225,9 +226,12 @@ pytest tests/ -v -s
 - `OPENROUTER_API_KEY`: Your OpenRouter API key
 - `GOOGLE_MAPS_API_KEY`: (Optional) Google Maps API key for Places API integration. Get one at [Google Cloud Console](https://console.cloud.google.com/). Enable Places API and Geocoding API.
 - `OPENWEATHER_API_KEY`: (Optional) OpenWeatherMap API key for weather information. Get one at [OpenWeatherMap](https://openweathermap.org/api). Free tier: 60 calls/minute.
+- `PREVIEW_API_TOKEN`: (Preview deployments only) Shared secret required by the backend for all `/api/*` requests when `VERCEL_ENV=preview`. This is injected by the Next.js server-side proxy so it never reaches the browser.
 
 ### Frontend (.env.local)
 - `NEXT_PUBLIC_API_URL`: Backend API URL (default: http://localhost:8000/api)
+ - `BACKEND_API_URL`: (Optional, server-side) Full backend API base URL including `/api`, e.g. `https://activities-agent-api.vercel.app/api`. If unset, previews derive it from `VERCEL_BRANCH_URL`, and local dev defaults to `http://localhost:8000/api`.
+ - `PREVIEW_API_TOKEN`: (Preview deployments only, server-side) Must match backend `PREVIEW_API_TOKEN`. Used only by the Next.js proxy route.
 
 ## License
 
