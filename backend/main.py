@@ -16,8 +16,7 @@ app = FastAPI(title="Activities Agent API", version="1.0.0")
 
 
 PRODUCTION_URL = "https://activitiesagent.vercel.app"
-VERCEL_PREVIEW_REGEX = r"https://activities-agent-frontend-.*\.vercel\.app"
-print('Using Vercel preview regex:', VERCEL_PREVIEW_REGEX)
+VERCEL_PREVIEW_URL_REGEX = r"https://activities-agent-frontend-.*\.vercel\.app"
 
 cors_origins = [
     "http://localhost:3000",
@@ -32,7 +31,7 @@ if extra_origins:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
-    allow_origin_regex=VERCEL_PREVIEW_REGEX,
+    allow_origin_regex=VERCEL_PREVIEW_URL_REGEX,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
