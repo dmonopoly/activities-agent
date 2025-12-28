@@ -20,7 +20,6 @@ export default function PreferencesPage() {
     try {
       const users = await api.getAllUsers();
       setAllUsers(users);
-      let fakeunused = 123;
 
       // Check if there's a saved user in localStorage
       let id = localStorage.getItem("userId");
