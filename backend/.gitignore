@@ -51,6 +51,7 @@ dmypy.json
 .env.local
 
 # Project-specific
+data/chat_history.json
 !data/.gitkeep
 
 # Google Sheets credentials
