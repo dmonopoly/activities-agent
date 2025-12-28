@@ -12,6 +12,7 @@ export default function HistoryPage() {
   const [histories, setHistories] = useState<ChatHistoryListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -43,11 +44,14 @@ export default function HistoryPage() {
     router.push(`/c/${historyId}`);
   };
 
-  const handleDelete = async (historyId: string) => {
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirmId) return;
+    
     try {
-      setDeletingId(historyId);
-      await api.deleteChatHistory(historyId);
-      setHistories((prev) => prev.filter((h) => h.id !== historyId));
+      setDeletingId(deleteConfirmId);
+      await api.deleteChatHistory(deleteConfirmId);
+      setHistories((prev) => prev.filter((h) => h.id !== deleteConfirmId));
+      setDeleteConfirmId(null);
     } catch (error) {
       console.error('Error deleting chat history:', error);
       alert('Failed to delete chat history. Please try again.');
@@ -136,7 +140,7 @@ export default function HistoryPage() {
                       Load
                     </button>
                     <button
-                      onClick={() => handleDelete(history.id)}
+                      onClick={() => setDeleteConfirmId(history.id)}
                       disabled={deletingId === history.id}
                       className="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
                     >
@@ -170,6 +174,32 @@ export default function HistoryPage() {
                 className="px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
               >
                 Clear All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Single Entry Confirmation Modal */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Chat?</h3>
+            <p className="text-gray-600 mb-6">
+              This will permanently delete this conversation. This action cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setDeleteConfirmId(null)}
+                className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                className="px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              >
+                Delete
               </button>
             </div>
           </div>
