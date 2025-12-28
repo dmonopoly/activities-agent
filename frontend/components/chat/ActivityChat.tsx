@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { api, ChatResponse, ChatHistoryMessage } from '@/lib/api';
 import ActivityCard from '@/components/ui/ActivityCard';
+import MarkdownContent from '@/components/ui/MarkdownContent';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -263,7 +264,11 @@ export default function ActivityChat({
                       : 'bg-gray-100 text-gray-900'
                   }`}
                 >
-                  <p className="whitespace-pre-wrap">{message.content}</p>
+                  {message.role === 'assistant' ? (
+                    <MarkdownContent content={message.content} />
+                  ) : (
+                    <p className="whitespace-pre-wrap">{message.content}</p>
+                  )}
                 </div>
               </div>
             ))}
