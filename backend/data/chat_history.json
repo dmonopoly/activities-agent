@@ -1,0 +1,20 @@
+{
+  "histories": {
+    "3b3581a0-08d7-415e-93ca-9347c6db6ff0": {
+      "id": "3b3581a0-08d7-415e-93ca-9347c6db6ff0",
+      "title": "Find me outdoor activities near me",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Find me outdoor activities near me"
+        },
+        {
+          "role": "assistant",
+          "content": "Sorry, I encountered an error. Please try again."
+        }
+      ],
+      "created_at": "2025-12-24T17:31:48.375424Z",
+      "updated_at": "2025-12-24T17:31:48.375424Z"
+    }
+  }
+}
