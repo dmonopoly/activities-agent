@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import ActivityChat from '@/components/chat/ActivityChat';
 import Header from '@/components/ui/Header';

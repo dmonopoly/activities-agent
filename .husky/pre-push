@@ -1,0 +1,8 @@
+echo "Running pre-push checks..."
+
+# Doesn't do anything, pre-push is for staged files...
+# bunx lint-staged --config .lintstagedrc-push.json
+
+cd frontend
+# bun run lint  # Uncomment when ready to make several fixes
+bun run build
