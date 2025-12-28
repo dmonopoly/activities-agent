@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import ActivityChat from '@/components/chat/ActivityChat';
-import { useState, useEffect } from 'react';
-import Header from '@/components/ui/Header';
+import { useEffect, useState } from "react";
+import ActivityChat from "@/components/chat/ActivityChat";
+import Header from "@/components/ui/Header";
 
 export default function Home() {
-  const [userId, setUserId] = useState<string>('');
+  const [userId, setUserId] = useState<string>("");
 
   useEffect(() => {
     // Get user ID from localStorage (set via Preferences page)
-    const id = localStorage.getItem('userId') || '';
+    const id = localStorage.getItem("userId") || "";
     setUserId(id);
   }, []);
 
