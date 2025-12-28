@@ -42,8 +42,7 @@ export default function ActivitiesPage() {
   };
 
   const handleAddToSheet = (activity: Activity) => {
-    // This would trigger the agent to save to sheets
-    // For now, just show a message
+    // TODO: This would trigger the agent to save to sheets. For now, just show a message.
     alert(
       `Added "${activity.name}" to your activity list! Use the chat to save to Google Sheets.`
     );
