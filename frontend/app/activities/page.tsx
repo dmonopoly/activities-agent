@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Header from '@/components/ui/Header';
 import { api, Activity } from '@/lib/api';
 import ActivityCard from '@/components/ui/ActivityCard';
 import ActivityChat from '@/components/chat/ActivityChat';
+import Header from '@/components/ui/Header';
 
 export default function ActivitiesPage() {
   const [userId, setUserId] = useState<string>('');
@@ -14,13 +14,13 @@ export default function ActivitiesPage() {
   const [query, setQuery] = useState('');
 
   useEffect(() => {
-    let id = localStorage.getItem('userId');
-    if (!id) {
-      id = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      localStorage.setItem('userId', id);
-    }
+    const id = localStorage.getItem('userId') || '';
     setUserId(id);
-    loadActivities(id);
+    if (id) {
+      loadActivities(id);
+    } else {
+      setLoading(false);
+    }
   }, []);
 
   const loadActivities = async (id: string) => {
@@ -92,7 +92,7 @@ export default function ActivitiesPage() {
               </div>
             ) : activities.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">No activities found. Try a different search!</p>
+                <p className="text-gray-500 text-lg">No activities found</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
