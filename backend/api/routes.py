@@ -10,7 +10,7 @@ from services.activity_fetcher import fetch_activities
 
 router = APIRouter()
 
-# Store agent instances per user (TODO: in production, use proper session management)
+# Store agent instances per user (TODO: in production, use proper session management).
 agents: Dict[str, AgentOrchestrator] = {}
 
 
