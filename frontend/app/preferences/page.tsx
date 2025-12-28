@@ -52,7 +52,6 @@ export default function PreferencesPage() {
         interests: prefs.interests || [],
         budget_min: prefs.budget_min || undefined,
         budget_max: prefs.budget_max || undefined,
-        date_preferences: prefs.date_preferences || "",
       });
     } catch (error) {
       console.error("Error loading preferences:", error);
@@ -257,30 +256,6 @@ export default function PreferencesPage() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
               />
             </div>
-          </div>
-
-          {/* Date Preferences */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Preferred Time
-            </label>
-            <select
-              value={preferences.date_preferences || ""}
-              onChange={(e) =>
-                setPreferences({
-                  ...preferences,
-                  date_preferences: e.target.value,
-                })
-              }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
-            >
-              <option value="">Any time</option>
-              <option value="weekend">Weekend</option>
-              <option value="weekday">Weekday</option>
-              <option value="evening">Evening</option>
-              <option value="morning">Morning</option>
-              <option value="afternoon">Afternoon</option>
-            </select>
           </div>
 
           {/* Save Button */}

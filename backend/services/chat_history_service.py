@@ -1,7 +1,6 @@
 """Chat history service for managing persistent chat storage"""
 import json
 import uuid
-from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
@@ -10,6 +9,7 @@ from models.chat_history import (
     ChatHistoryEntry,
     ChatHistoryListItem,
 )
+from utils.datetime_utils import utc_now_iso
 
 
 CHAT_HISTORY_FILE = Path(__file__).parent.parent / "data" / "chat_history.json"
@@ -95,11 +95,10 @@ def save_history(history_id: Optional[str], messages: List[ChatHistoryMessage]) 
     data = _read_chat_histories()
     histories = data.get("histories", {})
     
-    now = datetime.utcnow().isoformat() + "Z"
+    now = utc_now_iso()
     final_history_id = history_id or str(uuid.uuid4())
     
-    # Convert messages to dicts for storage
-    messages_dicts = [m.dict() for m in messages]
+    messages_dicts = [m.model_dump() for m in messages]
     
     # Generate title from first user message
     title = "New Chat"
@@ -109,12 +108,10 @@ def save_history(history_id: Optional[str], messages: List[ChatHistoryMessage]) 
             break
     
     if final_history_id in histories:
-        # Update existing
         histories[final_history_id]["messages"] = messages_dicts
         histories[final_history_id]["updated_at"] = now
         histories[final_history_id]["title"] = title
     else:
-        # Create new
         histories[final_history_id] = {
             "id": final_history_id,
             "title": title,

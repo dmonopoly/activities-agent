@@ -112,19 +112,16 @@ export default function ActivityChat({
     scrollToBottom();
   }, [messages]);
 
-  // Update messages if initialMessages changes (e.g., when loading from history)
   useEffect(() => {
     if (initialMessages.length > 0) {
       setMessages(initialMessages);
     }
   }, [initialMessages]);
 
-  // Update historyId if it changes from parent
   useEffect(() => {
     setCurrentHistoryId(initialHistoryId);
   }, [initialHistoryId]);
 
-  // Save messages to backend
   const saveHistory = useCallback(async (updatedMessages: Message[]) => {
     if (updatedMessages.length === 0) return;
 

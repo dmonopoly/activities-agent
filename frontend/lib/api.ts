@@ -58,7 +58,6 @@ export interface UserPreferences {
   interests?: string[];
   budget_min?: number;
   budget_max?: number;
-  date_preferences?: string;
 }
 
 export interface ChatHistoryMessage {

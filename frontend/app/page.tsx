@@ -14,6 +14,10 @@ export default function Home() {
     setUserId(id);
   }, []);
 
+  const handleHistoryChange = useCallback((newHistoryId: string) => {
+    router.push(`/c/${newHistoryId}`);
+  }, [router]);
+
   // if (!userId) {
   //   return (
   //     <div className="min-h-screen bg-white flex flex-col">
