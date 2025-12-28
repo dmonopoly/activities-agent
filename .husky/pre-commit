@@ -1,2 +1,2 @@
 echo "Running pre-commit lint fixes..."
-bunx lint-staged --config .lintstagedrc-commit.json
+bunx lint-staged --config .lintstagedrc.json
