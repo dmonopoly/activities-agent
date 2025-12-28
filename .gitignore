@@ -35,6 +35,4 @@ logs/
 *.tmp
 *.temp
 .cache/
-
-# Frontend
 node_modules/
