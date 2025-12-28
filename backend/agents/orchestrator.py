@@ -150,7 +150,7 @@ class AgentOrchestrator:
                 tools=ALL_TOOLS,
                 tool_choice="auto"
             )
-            print(f"[ORCHESTRATOR] ✅ HISTORY: {self.conversation_history}")
+            print(f"[ORCHESTRATOR] ✅ HISTORY: {self.conversation_history[-4:]}")
             print(f"[ORCHESTRATOR] ✅ API RESPONSE: {response}")
             return response
         except Exception as e:
@@ -214,11 +214,20 @@ class AgentOrchestrator:
         if not ENABLE_OPENROUTER_API:
             self._mock_scenario = random.choice(MOCK_RESPONSES_WITH_TOOLS)
 
+
+        # loop for some iterations while we have tools to execute
+        #   if we have tools to run, run them, get results, and use in next loop
+        #   accumulate skipped tools
+        #   if we have no tools to run, break
+        # 
+        # make final LLM call with params: skipped tools, tools that didn't execute because we hit max iterations
+        #   if we have skipped tools, append () to message saying so
+
         max_iterations = 3
         iteration = 0
         all_tool_results = []
         all_skipped_tools: List[str] = []
-        
+        final_message_content = ""
         while iteration < max_iterations:
             iteration += 1
             print(f'[ORCHESTRATOR] Iteration {iteration}/{max_iterations}')
@@ -234,12 +243,14 @@ class AgentOrchestrator:
                 }
             
             message_response = response.choices[0].message
-            content = message_response.content or ""  # Handle None content
-            print(f"[ORCHESTRATOR] Response received, has_tool_calls={bool(message_response.tool_calls)}, content_len={len(content)}")
-            
+            final_message_content = message_response.content or ""
+
+            tool_call_names = [tc.function.name or '(function.name missing)' for tc in (message_response.tool_calls or [])]
+            print(f"[ORCHESTRATOR] Response received: tool_call_names={tool_call_names}, content_len={len(final_message_content)}")
+
             assistant_message: Dict[str, Any] = {
                 "role": "assistant",
-                "content": content
+                "content": final_message_content
             }
             
             # Filter tool calls and track skipped ones
@@ -256,47 +267,10 @@ class AgentOrchestrator:
             
             # Check if we have any tools to execute
             has_tools_to_execute = "tool_calls" in assistant_message and assistant_message["tool_calls"]
-            skipped_tools_msg = ""
             
             if not has_tools_to_execute:
-                # No tools to execute - either LLM gave final response, or all tools were filtered
-                if skipped_tools and not content:
-                    # All tools were skipped and LLM didn't provide content
-                    # Inject a hint and get a text response
-                    print(f"[ORCHESTRATOR] All tools skipped ({skipped_tools}), requesting fallback response")
-                    hint = (
-                        f"The tools you requested ({', '.join(skipped_tools)}) are currently unavailable. "
-                        "Please provide a helpful response without using those tools, "
-                        "based on your general knowledge."
-                    )
-                    self.conversation_history.append({"role": "system", "content": hint})
-                    
-                    fallback_response = self._get_completion(model)
-                    if not fallback_response.choices:
-                        fallback_content = "I'm having trouble processing your request."
-                    else:
-                        fallback_content = fallback_response.choices[0].message.content or ""
-                    self.conversation_history.append({
-                        "role": "assistant", 
-                        "content": fallback_content
-                    })
-                    
-                    skipped_tools_msg = self._build_skipped_tools_message(all_skipped_tools)
-                    fallback_content += "\n\n(Note: " + skipped_tools_msg + ")" if skipped_tools_msg else ""
-                    return {
-                        "response": fallback_content.strip() or "I couldn't generate a response.",
-                        "tool_results": all_tool_results,
-                        "skipped_tools_message": skipped_tools_msg
-                    }
-                
-                print(f"[ORCHESTRATOR] No tool calls, returning final response")
-                final_msg = content if content else ""
-                final_msg += " " + skipped_tools_msg if skipped_tools_msg else ""
-                return {
-                    "response": final_msg.strip() or "I couldn't generate a response.",
-                    "tool_results": all_tool_results,
-                    "skipped_tools_message": self._build_skipped_tools_message(all_skipped_tools) if all_skipped_tools else None
-                }
+                print(f"[ORCHESTRATOR] No tools to execute, breaking out of loop")
+                break
             
             num_tool_calls = len(assistant_message["tool_calls"])
             print(f'[ORCHESTRATOR] Executing {num_tool_calls} tool call(s)')
@@ -317,28 +291,42 @@ class AgentOrchestrator:
                     "tool_call_id": tool_call["id"],
                     "content": json.dumps(result)
                 })
+
+        if iteration == max_iterations:
+            print(f"[ORCHESTRATOR] Max iterations reached ({iteration}/{max_iterations}), generating final summary response")
         
-        # If we exit the loop with tool results but no final response, 
-        # make one more LLM call to generate a human-readable summary
-        print(f"[ORCHESTRATOR] Max iterations reached, generating final summary response")
-        summary_response = self._get_completion(model)
-        if summary_response and summary_response.choices:
-            summary_content = summary_response.choices[0].message.content or ""
-            self.conversation_history.append({
-                "role": "assistant",
-                "content": summary_content
-            })
-            return {
-                "response": summary_content or "I found some results but couldn't summarize them.",
-                "tool_results": all_tool_results,
-                "skipped_tools_message": self._build_skipped_tools_message(all_skipped_tools) if all_skipped_tools else None
-            }
+        postscript = ""
+        skipped_tools_msg = ""
+        if all_skipped_tools:
+            print(f"[ORCHESTRATOR] Tools skipped: {all_skipped_tools}; adding hint")
+            hint = (
+                f"The tools you requested ({', '.join(all_skipped_tools)}) are currently unavailable. "
+                "Provide a helpful response without using those tools, based on your general knowledge."
+            )
+            self.conversation_history.append({"role": "system", "content": hint})
         
+            skipped_tools_msg = self._build_skipped_tools_message(all_skipped_tools)
+            postscript += "\n\n(Note: " + skipped_tools_msg + ")" if skipped_tools_msg else ""
+
+            summary_response = self._get_completion(model)
+
+            if summary_response and summary_response.choices:
+                final_message_content = ((summary_response.choices[0].message.content or "") + postscript).strip()
+                self.conversation_history.append({
+                    "role": "assistant", 
+                    "content": final_message_content
+                })
         return {
-            "response": "I encountered an issue processing your request.",
+            "response": final_message_content or "I found some results but couldn't summarize them.",
             "tool_results": all_tool_results,
-            "skipped_tools_message": self._build_skipped_tools_message(all_skipped_tools) if all_skipped_tools else None
+            "skipped_tools_message": skipped_tools_msg if skipped_tools_msg else None
         }
+
+        # return {
+        #     "response": "I encountered an issue processing your request.",
+        #     "tool_results": all_tool_results,
+        #     "skipped_tools_message": skipped_tools_msg if skipped_tools_msg else None
+        # }
     
     def reset_conversation(self):
         """Reset conversation history"""
