@@ -51,10 +51,6 @@ dmypy.json
 .env.local
 
 # Project-specific
-user_preferences.json
-token.json
-credentials.json
-data/*.json
 !data/.gitkeep
 
 # Google Sheets credentials
