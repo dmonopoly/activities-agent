@@ -12,7 +12,6 @@ export default function ActivitiesPage() {
   const [loading, setLoading] = useState(true);
   const [chatOpen, setChatOpen] = useState(false);
   const [query, setQuery] = useState("");
-  // tmp
 
   useEffect(() => {
     const id = localStorage.getItem("userId") || "";
