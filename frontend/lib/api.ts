@@ -10,6 +10,11 @@ function getApiBaseUrl(): string {
   // 2. Vercel preview deployment - derive backend URL from frontend URL
   // Frontend: activities-agent-frontend-git-{branch}-{owner}.vercel.app
   // Backend:  activities-agent-api-git-{branch}-{owner}.vercel.app
+  //
+  // TODO: Once, frontend url was wrong...
+  // https://activities-agent-frontend-git-chat-i-b6dfa0-dmonopolys-projects.vercel.app/
+  // cannot get what we want:
+  // https://activities-agent-api-git-chat-improvements-dmonopolys-projects.vercel.app/
   if (
     process.env.NEXT_PUBLIC_VERCEL_ENV === "preview" &&
     process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL

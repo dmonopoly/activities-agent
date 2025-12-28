@@ -256,6 +256,7 @@ class AgentOrchestrator:
             
             # Check if we have any tools to execute
             has_tools_to_execute = "tool_calls" in assistant_message and assistant_message["tool_calls"]
+            skipped_tools_msg = ""
             
             if not has_tools_to_execute:
                 # No tools to execute - either LLM gave final response, or all tools were filtered
@@ -281,7 +282,7 @@ class AgentOrchestrator:
                     })
                     
                     skipped_tools_msg = self._build_skipped_tools_message(all_skipped_tools)
-                    fallback_content += "\n\n(Note:" + skipped_tools_msg + ")" if skipped_tools_msg else ""
+                    fallback_content += "\n\n(Note: " + skipped_tools_msg + ")" if skipped_tools_msg else ""
                     return {
                         "response": fallback_content.strip() or "I couldn't generate a response.",
                         "tool_results": all_tool_results,

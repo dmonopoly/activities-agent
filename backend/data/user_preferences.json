@@ -2,35 +2,56 @@
   "user_lic_nyc": {
     "user_id": "lic_nyc_user",
     "location": "Long Island City, NY",
-    "interests": ["art", "unique coffee shops", "walks"],
+    "interests": [
+      "art",
+      "unique coffee shops",
+      "walks"
+    ],
     "budget_min": null,
     "budget_max": 30.0
   },
   "user_dumbo_nyc": {
     "user_id": "dumbo_nyc_user",
     "location": "Dumbo, Brooklyn, NY",
-    "interests": ["outdoor", "beautiful views", "romantic"],
+    "interests": [
+      "outdoor",
+      "beautiful views",
+      "romantic",
+      "Mediterranean food"
+    ],
     "budget_min": null,
     "budget_max": 75.0
   },
   "user_williamsburg_nyc": {
     "user_id": "williamsburg_nyc_user",
     "location": "Williamsburg, Brooklyn, NY",
-    "interests": ["music", "food", "places with foosball and pinball"],
+    "interests": [
+      "music",
+      "food",
+      "places with foosball and pinball"
+    ],
     "budget_min": null,
     "budget_max": 50.0
   },
   "user_fidi_nyc": {
     "user_id": "fidi_nyc_user",
     "location": "Financial District, Manhattan, NY",
-    "interests": ["food", "entertainment", "shopping"],
+    "interests": [
+      "food",
+      "entertainment",
+      "shopping"
+    ],
     "budget_min": null,
     "budget_max": 100.0
   },
   "user_midtown_nyc": {
     "user_id": "midtown_nyc_user",
     "location": "Midtown, Manhattan, NY",
-    "interests": ["comedy shows", "mediterranean food", "movies/entertainment"],
+    "interests": [
+      "comedy shows",
+      "mediterranean food",
+      "movies/entertainment"
+    ],
     "budget_min": null,
     "budget_max": 60.0
   }
