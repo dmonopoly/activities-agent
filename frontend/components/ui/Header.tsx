@@ -22,20 +22,20 @@ export default function Header({ userId }: HeaderProps) {
               <Link href="/history" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
                 Chat History
               </Link>
-              <Link href="/activities" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+              {/* TODO: Enable when ready <Link href="/activities" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
                 Browse Activities
-              </Link>
+              </Link> */}
               <Link href="/preferences" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
                 Preferences
               </Link>
             </nav>
             {userId && (
-              <div className="flex items-center gap-2 pl-6 border-l border-gray-200">
+              <Link href="/preferences" className="flex items-center gap-2 pl-6 border-l border-gray-200 hover:opacity-80 transition-opacity">
                 <span className="text-xs text-gray-400">User:</span>
                 <span className="px-2 py-1 bg-pink-50 text-pink-700 text-xs font-medium rounded-full max-w-[150px] truncate" title={userId}>
                   {userId}
                 </span>
-              </div>
+              </Link>
             )}
           </div>
         </div>
