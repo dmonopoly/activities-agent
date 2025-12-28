@@ -7,6 +7,12 @@ from agents.orchestrator import AgentOrchestrator
 from agents.tools.preferences import get_user_preferences, update_user_preferences, get_all_user_ids
 from agents.tools.scraper import scrape_activities
 from services.activity_fetcher import fetch_activities
+from services import chat_history_service
+from models.chat_history import (
+    ChatHistoryEntry,
+    ChatHistoryListItem,
+    ChatHistorySave,
+)
 
 router = APIRouter()
 
@@ -129,5 +135,64 @@ async def get_activities(
         return result
     except HTTPException:
         raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/chat-history")
+async def list_chat_histories() -> List[ChatHistoryListItem]:
+    """List all chat histories (without full messages)"""
+    try:
+        return chat_history_service.list_all_histories()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/chat-history/{history_id}")
+async def get_chat_history(history_id: str) -> ChatHistoryEntry:
+    """Get a specific chat history with full messages"""
+    try:
+        history = chat_history_service.get_history_by_id(history_id)
+        
+        if history is None:
+            raise HTTPException(status_code=404, detail="Chat history not found")
+        
+        return history
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/chat-history")
+async def save_chat_history(history_save: ChatHistorySave) -> ChatHistoryEntry:
+    """Save or update a chat history"""
+    try:
+        return chat_history_service.save_history(history_save.id, history_save.messages)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/chat-history/{history_id}")
+async def delete_chat_history(history_id: str):
+    """Delete a specific chat history"""
+    try:
+        deleted = chat_history_service.delete_history(history_id)
+        
+        if not deleted:
+            raise HTTPException(status_code=404, detail="Chat history not found")
+        
+        return {"message": "Chat history deleted", "id": history_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/chat-history")
+async def clear_all_chat_history():
+    """Clear all chat histories"""
+    try:
+        chat_history_service.clear_all_histories()
+        return {"message": "All chat histories cleared"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

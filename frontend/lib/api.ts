@@ -10,6 +10,11 @@ function getApiBaseUrl(): string {
   // 2. Vercel preview deployment - derive backend URL from frontend URL
   // Frontend: activities-agent-frontend-git-{branch}-{owner}.vercel.app
   // Backend:  activities-agent-api-git-{branch}-{owner}.vercel.app
+  //
+  // TODO: Once, frontend url was wrong...
+  // https://activities-agent-frontend-git-chat-i-b6dfa0-dmonopolys-projects.vercel.app/
+  // cannot get what we want:
+  // https://activities-agent-api-git-chat-improvements-dmonopolys-projects.vercel.app/
   if (
     process.env.NEXT_PUBLIC_VERCEL_ENV === "preview" &&
     process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL
@@ -58,7 +63,27 @@ export interface UserPreferences {
   interests?: string[];
   budget_min?: number;
   budget_max?: number;
-  date_preferences?: string;
+}
+
+export interface ChatHistoryMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface ChatHistoryEntry {
+  id: string;
+  title: string;
+  messages: ChatHistoryMessage[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ChatHistoryListItem {
+  id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+  message_count: number;
 }
 
 export const api = {
@@ -147,5 +172,64 @@ export const api = {
 
     const data = await response.json();
     return data.activities || [];
+  },
+
+  // Chat History APIs
+  async getChatHistories(): Promise<ChatHistoryListItem[]> {
+    const response = await fetch(`${API_BASE_URL}/chat-history`);
+    if (!response.ok) {
+      throw new Error(`Chat history API error: ${response.statusText}`);
+    }
+    return response.json();
+  },
+
+  async getChatHistory(id: string): Promise<ChatHistoryEntry> {
+    const response = await fetch(`${API_BASE_URL}/chat-history/${id}`);
+    if (!response.ok) {
+      throw new Error(`Chat history API error: ${response.statusText}`);
+    }
+    return response.json();
+  },
+
+  async saveChatHistory(
+    id: string | null,
+    messages: ChatHistoryMessage[]
+  ): Promise<ChatHistoryEntry> {
+    const response = await fetch(`${API_BASE_URL}/chat-history`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id,
+        messages,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Save chat history API error: ${response.statusText}`);
+    }
+
+    return response.json();
+  },
+
+  async deleteChatHistory(id: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/chat-history/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Delete chat history API error: ${response.statusText}`);
+    }
+  },
+
+  async clearAllChatHistory(): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/chat-history`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Clear chat history API error: ${response.statusText}`);
+    }
   },
 };

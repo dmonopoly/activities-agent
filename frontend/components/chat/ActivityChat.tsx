@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { api, ChatResponse } from '@/lib/api';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { api, ChatResponse, ChatHistoryMessage } from '@/lib/api';
 import ActivityCard from '@/components/ui/ActivityCard';
 
 interface Message {
@@ -11,6 +11,9 @@ interface Message {
 
 interface ActivityChatProps {
   userId?: string;
+  historyId?: string | null;
+  initialMessages?: Message[];
+  onHistoryChange?: (historyId: string) => void;
 }
 
 const SendIcon = () => (
@@ -88,11 +91,17 @@ const ChatInput = ({ input, setInput, onSubmit, loading, containerClassName = ''
   );
 };
 
-export default function ActivityChat({ userId = 'default' }: ActivityChatProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
+export default function ActivityChat({ 
+  userId = 'default', 
+  historyId: initialHistoryId = null,
+  initialMessages = [],
+  onHistoryChange
+}: ActivityChatProps) {
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | undefined>();
+  const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(initialHistoryId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -103,19 +112,52 @@ export default function ActivityChat({ userId = 'default' }: ActivityChatProps) 
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    if (initialMessages.length > 0) {
+      setMessages(initialMessages);
+    }
+  }, [initialMessages]);
+
+  useEffect(() => {
+    setCurrentHistoryId(initialHistoryId);
+  }, [initialHistoryId]);
+
+  const saveHistory = useCallback(async (updatedMessages: Message[]) => {
+    if (updatedMessages.length === 0) return;
+
+    try {
+      const result = await api.saveChatHistory(
+        currentHistoryId,
+        updatedMessages as ChatHistoryMessage[]
+      );
+      
+      // Update history ID if new
+      if (result.id !== currentHistoryId) {
+        setCurrentHistoryId(result.id);
+        onHistoryChange?.(result.id);
+      }
+    } catch (error) {
+      console.error('Failed to save chat history:', error);
+    }
+  }, [currentHistoryId, onHistoryChange]);
+
   const sendMessage = async (messageText: string) => {
     if (!messageText.trim() || loading) return;
 
     const userMessage = messageText.trim();
     setInput('');
-    setMessages((prev) => [...prev, { role: 'user', content: userMessage }]);
+    const newMessages: Message[] = [...messages, { role: 'user', content: userMessage }];
+    setMessages(newMessages);
     setLoading(true);
 
     try {
       const response: ChatResponse = await api.chat(userMessage, userId, conversationId);
       
+      let finalMessages = newMessages;
+      
       if (response.response) {
-        setMessages((prev) => [...prev, { role: 'assistant', content: response.response }]);
+        finalMessages = [...newMessages, { role: 'assistant', content: response.response }];
+        setMessages(finalMessages);
       }
 
       // Extract activities from tool results if any
@@ -125,23 +167,28 @@ export default function ActivityChat({ userId = 'default' }: ActivityChatProps) 
 
       if (activities && activities.length > 0) {
         // Display activities as cards
-        setMessages((prev) => [
-          ...prev,
+        finalMessages = [
+          ...finalMessages,
           {
             role: 'assistant',
             content: `Here are ${activities.length} activities I found:`,
           },
-        ]);
+        ];
+        setMessages(finalMessages);
       }
+
+      await saveHistory(finalMessages);
     } catch (error) {
       console.error('Chat error:', error);
-      setMessages((prev) => [
-        ...prev,
+      const errorMessages: Message[] = [
+        ...newMessages,
         {
           role: 'assistant',
           content: 'Sorry, I encountered an error. Please try again.',
         },
-      ]);
+      ];
+      setMessages(errorMessages);
+      await saveHistory(errorMessages);
     } finally {
       setLoading(false);
     }

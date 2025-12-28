@@ -16,6 +16,12 @@ export default function Header({ userId }: HeaderProps) {
           </Link>
           <div className="flex items-center gap-6">
             <nav className="flex gap-6">
+              <Link href="/" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+                New Chat
+              </Link>
+              <Link href="/history" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+                Chat History
+              </Link>
               <Link href="/activities" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
                 Browse Activities
               </Link>
