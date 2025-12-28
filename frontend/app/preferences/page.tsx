@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { api, UserPreferences } from '@/lib/api';
-import Header from '@/components/ui/Header';
+import { useEffect, useState } from "react";
+import Header from "@/components/ui/Header";
+import { api, UserPreferences } from "@/lib/api";
 
 export default function PreferencesPage() {
-  const [userId, setUserId] = useState<string>('');
+  const [userId, setUserId] = useState<string>("");
   const [allUsers, setAllUsers] = useState<string[]>([]);
   const [preferences, setPreferences] = useState<Partial<UserPreferences>>({});
   const [loading, setLoading] = useState(true);
@@ -20,23 +20,26 @@ export default function PreferencesPage() {
     try {
       const users = await api.getAllUsers();
       setAllUsers(users);
-      
+      let x = 123;
+
       // Check if there's a saved user in localStorage
-      let id = localStorage.getItem('userId');
+      let id = localStorage.getItem("userId");
       if (id && users.includes(id)) {
         setUserId(id);
         await loadPreferences(id);
       } else if (users.length > 0) {
-        console.log('Local storage user not found in user list, defaulting to first user');
+        console.log(
+          "Local storage user not found in user list, defaulting to first user"
+        );
         id = users[0];
-        localStorage.setItem('userId', id);
+        localStorage.setItem("userId", id);
         setUserId(id);
         await loadPreferences(id);
       } else {
         setLoading(false);
       }
     } catch (error) {
-      console.error('Error loading users:', error);
+      console.error("Error loading users:", error);
       setLoading(false);
     }
   };
@@ -46,14 +49,14 @@ export default function PreferencesPage() {
       setLoading(true);
       const prefs = await api.getPreferences(id);
       setPreferences({
-        location: prefs.location || '',
+        location: prefs.location || "",
         interests: prefs.interests || [],
         budget_min: prefs.budget_min || undefined,
         budget_max: prefs.budget_max || undefined,
-        date_preferences: prefs.date_preferences || '',
+        date_preferences: prefs.date_preferences || "",
       });
     } catch (error) {
-      console.error('Error loading preferences:', error);
+      console.error("Error loading preferences:", error);
     } finally {
       setLoading(false);
     }
@@ -61,7 +64,7 @@ export default function PreferencesPage() {
 
   const handleUserChange = async (newUserId: string) => {
     setUserId(newUserId);
-    localStorage.setItem('userId', newUserId);
+    localStorage.setItem("userId", newUserId);
     await loadPreferences(newUserId);
   };
 
@@ -75,8 +78,8 @@ export default function PreferencesPage() {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (error) {
-      console.error('Error saving preferences:', error);
-      alert('Failed to save preferences. Please try again.');
+      console.error("Error saving preferences:", error);
+      alert("Failed to save preferences. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -118,8 +121,12 @@ export default function PreferencesPage() {
 
       {/* Main Content */}
       <main className="flex-1 max-w-3xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Your Preferences</h1>
-        <p className="text-gray-600 mb-8">Help us find the ideal activities for you!</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          Your Preferences
+        </h1>
+        <p className="text-gray-600 mb-8">
+          Help us find the ideal activities for you!
+        </p>
 
         <div className="space-y-6">
           {/* User Selector */}
@@ -150,8 +157,10 @@ export default function PreferencesPage() {
             </label>
             <input
               type="text"
-              value={preferences.location || ''}
-              onChange={(e) => setPreferences({ ...preferences, location: e.target.value })}
+              value={preferences.location || ""}
+              onChange={(e) =>
+                setPreferences({ ...preferences, location: e.target.value })
+              }
               placeholder="City, neighborhood, or area"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
             />
@@ -169,19 +178,21 @@ export default function PreferencesPage() {
                 placeholder="Add an interest (e.g., outdoor, art, music)"
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === "Enter") {
                     handleInterestAdd(e.currentTarget.value);
-                    e.currentTarget.value = '';
+                    e.currentTarget.value = "";
                   }
                 }}
               />
               <button
                 type="button"
                 onClick={() => {
-                  const input = document.getElementById('interest-input') as HTMLInputElement;
+                  const input = document.getElementById(
+                    "interest-input"
+                  ) as HTMLInputElement;
                   if (input && input.value) {
                     handleInterestAdd(input.value);
-                    input.value = '';
+                    input.value = "";
                   }
                 }}
                 className="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
@@ -215,11 +226,13 @@ export default function PreferencesPage() {
               </label>
               <input
                 type="number"
-                value={preferences.budget_min || ''}
+                value={preferences.budget_min || ""}
                 onChange={(e) =>
                   setPreferences({
                     ...preferences,
-                    budget_min: e.target.value ? parseFloat(e.target.value) : undefined,
+                    budget_min: e.target.value
+                      ? parseFloat(e.target.value)
+                      : undefined,
                   })
                 }
                 placeholder="0"
@@ -232,11 +245,13 @@ export default function PreferencesPage() {
               </label>
               <input
                 type="number"
-                value={preferences.budget_max || ''}
+                value={preferences.budget_max || ""}
                 onChange={(e) =>
                   setPreferences({
                     ...preferences,
-                    budget_max: e.target.value ? parseFloat(e.target.value) : undefined,
+                    budget_max: e.target.value
+                      ? parseFloat(e.target.value)
+                      : undefined,
                   })
                 }
                 placeholder="1000"
@@ -251,9 +266,12 @@ export default function PreferencesPage() {
               Preferred Time
             </label>
             <select
-              value={preferences.date_preferences || ''}
+              value={preferences.date_preferences || ""}
               onChange={(e) =>
-                setPreferences({ ...preferences, date_preferences: e.target.value })
+                setPreferences({
+                  ...preferences,
+                  date_preferences: e.target.value,
+                })
               }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
             >
@@ -272,10 +290,10 @@ export default function PreferencesPage() {
               onClick={handleSave}
               disabled={saving}
               className={`w-full px-6 py-3 bg-pink-600 text-white rounded-lg font-medium hover:bg-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
-                saved ? 'bg-green-600 hover:bg-green-700' : ''
+                saved ? "bg-green-600 hover:bg-green-700" : ""
               }`}
             >
-              {saved ? '✓ Saved!' : saving ? 'Saving...' : 'Save Preferences'}
+              {saved ? "✓ Saved!" : saving ? "Saving..." : "Save Preferences"}
             </button>
           </div>
         </div>
