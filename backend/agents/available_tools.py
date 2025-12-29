@@ -17,7 +17,7 @@ ALLOWLISTED_TOOLS: set[str] = {
     # 'get_weather_for_location',
 
     # Web Scraping
-    'scrape_activities',
+    # 'scrape_activities',
 
     # Google Sheets
     'save_to_sheets',
