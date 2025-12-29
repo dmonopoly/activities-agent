@@ -10,9 +10,29 @@ load_dotenv(dotenv_path=env_path)
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.routes import router
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="Activities Agent API", version="1.0.0")
+from api.routes import router
+from services.db import is_mongodb_enabled
+from agents.tools.preferences import seed_preferences_from_json_if_empty
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan handler for startup/shutdown events."""
+    # Startup: seed MongoDB from JSON if needed
+    if is_mongodb_enabled():
+        print("[STARTUP] MongoDB enabled, checking if seeding is needed...")
+        seed_preferences_from_json_if_empty()
+    else:
+        print("[STARTUP] Using JSON file storage (MongoDB not configured)")
+    
+    yield
+    
+    # Shutdown: nothing to clean up currently
+
+
+app = FastAPI(title="Activities Agent API", version="1.0.0", lifespan=lifespan)
 
 
 PRODUCTION_URL = "https://activitiesagent.vercel.app"
