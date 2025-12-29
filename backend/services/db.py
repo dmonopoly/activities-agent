@@ -43,6 +43,7 @@ def get_mongo_client() -> MongoClient:
         if not uri:
             raise ValueError("MONGODB_URI environment variable is not set")
         
+        print(f"tmp delete [DEBUG] Connecting to MongoDB at {uri}")
         _client = MongoClient(uri)
     return _client
 

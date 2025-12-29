@@ -201,7 +201,8 @@ def _update_user_preferences_mongo(
 
 def seed_preferences_from_json_if_empty() -> bool:
     """
-    Seed MongoDB user preferences collection from JSON file if empty.
+    Seed MongoDB user preferences collection from JSON file if MongoDB
+    user preferences collection is empty.
     
     Used during production startup to initialize the database with
     predefined user profiles.
@@ -212,29 +213,31 @@ def seed_preferences_from_json_if_empty() -> bool:
     if not is_mongodb_enabled():
         return False
     
-    collection = get_user_preferences_collection()
+    try:
+        collection = get_user_preferences_collection()
+        
+        if collection.count_documents({}) > 0:
+            print("[SEED] MongoDB collection already has data, skipping seed")
+            return False
+        
+        prefs = _load_preferences_json()
+        if not prefs:
+            print("[SEED] WARNING: JSON file is empty, nothing to seed")
+            return False
+        
+        documents = []
+        for user_id, user_prefs in prefs.items():
+            doc = {**user_prefs, "user_id": user_id}
+            documents.append(doc)
+        
+        collection.insert_many(documents)
+        print(f"[SEED] Successfully seeded {len(documents)} user preferences from JSON")
+        return True
     
-    if collection.count_documents({}) > 0:
-        print("[PREFERENCES] MongoDB collection already has data, skipping seed")
+    except Exception as e:
+        print(f"[SEED] ERROR during MongoDB seeding: {e}")
+        # Don't crash the app on seed failure - it can still work without initial data
         return False
-    
-    if not os.path.exists(PREFERENCES_FILE):
-        print("[PREFERENCES] No JSON file to seed from")
-        return False
-    
-    prefs = _load_preferences_json()
-    if not prefs:
-        print("[PREFERENCES] JSON file is empty, nothing to seed")
-        return False
-    
-    documents = []
-    for user_id, user_prefs in prefs.items():
-        doc = {**user_prefs, "user_id": user_id}
-        documents.append(doc)
-    
-    collection.insert_many(documents)
-    print(f"[PREFERENCES] Seeded {len(documents)} user preferences from JSON")
-    return True
 
 
 # -----------------------------------------------------------------------------
