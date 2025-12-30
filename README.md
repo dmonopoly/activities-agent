@@ -190,6 +190,48 @@ The agent system uses a merged architecture where:
 - Server-side rendering where appropriate
 - Tailwind CSS for styling
 
+### Code Formatting
+
+Both the frontend and backend have automated code formatting configured.
+
+#### Frontend (Prettier + Tailwind)
+
+```bash
+cd frontend
+
+# Format all files
+bun run format
+
+# Check formatting (CI-friendly)
+bun run format:check
+```
+
+Features:
+- **Prettier** for code formatting
+- **Import sorting** via `@ianvs/prettier-plugin-sort-imports`
+- **Tailwind class sorting** via `prettier-plugin-tailwindcss`
+
+#### Backend (Ruff)
+
+```bash
+cd backend
+
+# Format all code
+ruff format .
+
+# Check for lint issues
+ruff check .
+
+# Auto-fix lint issues
+ruff check --fix .
+```
+
+Features:
+- **Ruff** - Fast Python linter and formatter (written in Rust)
+- Black-compatible formatting
+- Import sorting (isort-compatible)
+- Lint rules: pycodestyle, Pyflakes, bugbear, comprehensions, pyupgrade
+
 ## Testing
 
 ### Running Backend Tests
