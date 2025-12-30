@@ -1,6 +1,8 @@
 """Main FastAPI application"""
+
 import os
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 # Load environment variables FIRST, before any other imports
@@ -8,13 +10,14 @@ from dotenv import load_dotenv
 env_path = Path(__file__).parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from agents.tools.preferences import seed_preferences_from_json_if_empty
 from api.routes import router
 from services.db import is_mongodb_enabled
-from agents.tools.preferences import seed_preferences_from_json_if_empty
 
 
 @asynccontextmanager
@@ -26,9 +29,9 @@ async def lifespan(app: FastAPI):
         seed_preferences_from_json_if_empty()
     else:
         print("[STARTUP] Using JSON file storage (MongoDB not configured)")
-    
+
     yield
-    
+
     # Shutdown: nothing to clean up currently
 
 
@@ -49,7 +52,9 @@ cors_origins = [
 
 extra_origins = os.getenv("CORS_ORIGINS", "")
 if extra_origins:
-    cors_origins.extend([origin.strip() for origin in extra_origins.split(",") if origin.strip()])
+    cors_origins.extend(
+        [origin.strip() for origin in extra_origins.split(",") if origin.strip()]
+    )
 
 app.add_middleware(
     CORSMiddleware,
@@ -75,4 +80,5 @@ async def health():
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

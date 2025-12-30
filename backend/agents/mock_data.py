@@ -8,24 +8,26 @@ Each mock data section documents the expected structure based on the real API.
 """
 
 import json
-from typing import Dict, List, Any, Optional
+from typing import Any
 
 from openai.types.chat import ChatCompletion, ChatCompletionMessage
 from openai.types.chat.chat_completion import Choice
-from openai.types.chat.chat_completion_message_tool_call import ChatCompletionMessageToolCall, Function
+from openai.types.chat.chat_completion_message_tool_call import (
+    ChatCompletionMessageToolCall,
+    Function,
+)
 
 
 def make_mock_completion(
-    tool_calls: Optional[List[Dict[str, Any]]] = None,
-    content: Optional[str] = None
+    tool_calls: list[dict[str, Any]] | None = None, content: str | None = None
 ) -> ChatCompletion:
     """
     Build a real ChatCompletion object for mocking LLM responses.
-    
+
     Args:
         tool_calls: List of {"name": str, "arguments": dict} for iteration 1
         content: Response text for final iteration (no tool calls)
-    
+
     Returns:
         A real ChatCompletion object that matches the OpenAI API structure
     """
@@ -37,30 +39,28 @@ def make_mock_completion(
                 id=f"call_mock_{i}",
                 type="function",
                 function=Function(
-                    name=tc["name"],
-                    arguments=json.dumps(tc.get("arguments", {}))
-                )
+                    name=tc["name"], arguments=json.dumps(tc.get("arguments", {}))
+                ),
             )
             for i, tc in enumerate(tool_calls)
         ]
-    
+
     return ChatCompletion(
         id="mock-completion",
         choices=[
             Choice(
                 index=0,
                 message=ChatCompletionMessage(
-                    role="assistant",
-                    content=content,
-                    tool_calls=message_tool_calls
+                    role="assistant", content=content, tool_calls=message_tool_calls
                 ),
-                finish_reason="tool_calls" if tool_calls else "stop"
+                finish_reason="tool_calls" if tool_calls else "stop",
             )
         ],
         created=1234567890,
         model="mock-model",
-        object="chat.completion"
+        object="chat.completion",
     )
+
 
 # =============================================================================
 # WEATHER API MOCK DATA
@@ -82,7 +82,7 @@ def make_mock_completion(
 #     "outdoor_recommendation": str  # Human-readable recommendation
 # }
 
-MOCK_WEATHER_RESPONSES: List[Dict[str, Any]] = [
+MOCK_WEATHER_RESPONSES: list[dict[str, Any]] = [
     {
         "location": "San Francisco, CA",
         "temperature": 68,
@@ -94,7 +94,7 @@ MOCK_WEATHER_RESPONSES: List[Dict[str, Any]] = [
         "precipitation": 0,
         "clouds": 10,
         "outdoor_suitable": True,
-        "outdoor_recommendation": "Great weather for outdoor activities!"
+        "outdoor_recommendation": "Great weather for outdoor activities!",
     },
     {
         "location": "Oakland, CA",
@@ -107,7 +107,7 @@ MOCK_WEATHER_RESPONSES: List[Dict[str, Any]] = [
         "precipitation": 0,
         "clouds": 40,
         "outdoor_suitable": True,
-        "outdoor_recommendation": "Weather is okay for outdoor activities"
+        "outdoor_recommendation": "Weather is okay for outdoor activities",
     },
     {
         "location": "Berkeley, CA",
@@ -120,7 +120,7 @@ MOCK_WEATHER_RESPONSES: List[Dict[str, Any]] = [
         "precipitation": 0.5,
         "clouds": 85,
         "outdoor_suitable": False,
-        "outdoor_recommendation": "Rainy weather - consider indoor activities"
+        "outdoor_recommendation": "Rainy weather - consider indoor activities",
     },
     {
         "location": "Palo Alto, CA",
@@ -133,7 +133,7 @@ MOCK_WEATHER_RESPONSES: List[Dict[str, Any]] = [
         "precipitation": 0,
         "clouds": 5,
         "outdoor_suitable": True,
-        "outdoor_recommendation": "Great weather for outdoor activities!"
+        "outdoor_recommendation": "Great weather for outdoor activities!",
     },
     {
         "location": "San Jose, CA",
@@ -146,7 +146,7 @@ MOCK_WEATHER_RESPONSES: List[Dict[str, Any]] = [
         "precipitation": 0,
         "clouds": 0,
         "outdoor_suitable": True,
-        "outdoor_recommendation": "Weather is okay for outdoor activities"
+        "outdoor_recommendation": "Weather is okay for outdoor activities",
     },
     {
         "location": "Mountain View, CA",
@@ -159,8 +159,8 @@ MOCK_WEATHER_RESPONSES: List[Dict[str, Any]] = [
         "precipitation": 0,
         "clouds": 95,
         "outdoor_suitable": False,
-        "outdoor_recommendation": "Cold weather - dress warmly or choose indoor activities"
-    }
+        "outdoor_recommendation": "Cold weather - dress warmly or choose indoor activities",
+    },
 ]
 
 
@@ -176,17 +176,77 @@ MOCK_WEATHER_RESPONSES: List[Dict[str, Any]] = [
 #     "line_name": str   # Line short name or name (e.g., "BART", "N Judah")
 # }
 
-MOCK_TRANSIT_STOPS: List[Dict[str, Any]] = [
-    {"name": "16th St Mission", "lat": 37.7650, "lng": -122.4197, "type": "SUBWAY", "line_name": "BART"},
-    {"name": "24th St Mission", "lat": 37.7522, "lng": -122.4181, "type": "SUBWAY", "line_name": "BART"},
-    {"name": "Powell St", "lat": 37.7844, "lng": -122.4080, "type": "SUBWAY", "line_name": "BART"},
-    {"name": "Montgomery St", "lat": 37.7894, "lng": -122.4013, "type": "SUBWAY", "line_name": "BART"},
-    {"name": "Embarcadero", "lat": 37.7929, "lng": -122.3968, "type": "SUBWAY", "line_name": "BART"},
-    {"name": "Church & Market", "lat": 37.7679, "lng": -122.4291, "type": "LIGHT_RAIL", "line_name": "Muni Metro"},
-    {"name": "Castro St", "lat": 37.7625, "lng": -122.4351, "type": "LIGHT_RAIL", "line_name": "Muni Metro"},
-    {"name": "Van Ness", "lat": 37.7752, "lng": -122.4192, "type": "SUBWAY", "line_name": "Muni Metro"},
-    {"name": "Civic Center", "lat": 37.7796, "lng": -122.4139, "type": "SUBWAY", "line_name": "BART"},
-    {"name": "Glen Park", "lat": 37.7329, "lng": -122.4332, "type": "SUBWAY", "line_name": "BART"},
+MOCK_TRANSIT_STOPS: list[dict[str, Any]] = [
+    {
+        "name": "16th St Mission",
+        "lat": 37.7650,
+        "lng": -122.4197,
+        "type": "SUBWAY",
+        "line_name": "BART",
+    },
+    {
+        "name": "24th St Mission",
+        "lat": 37.7522,
+        "lng": -122.4181,
+        "type": "SUBWAY",
+        "line_name": "BART",
+    },
+    {
+        "name": "Powell St",
+        "lat": 37.7844,
+        "lng": -122.4080,
+        "type": "SUBWAY",
+        "line_name": "BART",
+    },
+    {
+        "name": "Montgomery St",
+        "lat": 37.7894,
+        "lng": -122.4013,
+        "type": "SUBWAY",
+        "line_name": "BART",
+    },
+    {
+        "name": "Embarcadero",
+        "lat": 37.7929,
+        "lng": -122.3968,
+        "type": "SUBWAY",
+        "line_name": "BART",
+    },
+    {
+        "name": "Church & Market",
+        "lat": 37.7679,
+        "lng": -122.4291,
+        "type": "LIGHT_RAIL",
+        "line_name": "Muni Metro",
+    },
+    {
+        "name": "Castro St",
+        "lat": 37.7625,
+        "lng": -122.4351,
+        "type": "LIGHT_RAIL",
+        "line_name": "Muni Metro",
+    },
+    {
+        "name": "Van Ness",
+        "lat": 37.7752,
+        "lng": -122.4192,
+        "type": "SUBWAY",
+        "line_name": "Muni Metro",
+    },
+    {
+        "name": "Civic Center",
+        "lat": 37.7796,
+        "lng": -122.4139,
+        "type": "SUBWAY",
+        "line_name": "BART",
+    },
+    {
+        "name": "Glen Park",
+        "lat": 37.7329,
+        "lng": -122.4332,
+        "type": "SUBWAY",
+        "line_name": "BART",
+    },
 ]
 
 
@@ -219,7 +279,7 @@ MOCK_TRANSIT_STOPS: List[Dict[str, Any]] = [
 #     "gmaps_review_summary": str,    # Review summary text
 # }
 
-MOCK_PLACES: List[Dict[str, Any]] = [
+MOCK_PLACES: list[dict[str, Any]] = [
     {
         "name": "[Stub] Dolores Park",
         "location": "Dolores St & 19th St, San Francisco, CA 94114",
@@ -234,7 +294,7 @@ MOCK_PLACES: List[Dict[str, Any]] = [
         "gmaps_price_level": 0,
         "gmaps_opening_hours": "Open 24 hours",
         "gmaps_review_summary": "Reviewers mention: local favorite, unique. Matches interests: outdoor",
-        "coordinates": {"lat": 37.7598, "lng": -122.4269}
+        "coordinates": {"lat": 37.7598, "lng": -122.4269},
     },
     {
         "name": "[Stub] Sightglass Coffee",
@@ -250,7 +310,7 @@ MOCK_PLACES: List[Dict[str, Any]] = [
         "gmaps_price_level": 2,
         "gmaps_opening_hours": "Mon-Fri: 7AM-6PM; Sat-Sun: 8AM-6PM",
         "gmaps_review_summary": "Reviewers mention: unique, authentic. Matches interests: coffee",
-        "coordinates": {"lat": 37.7771, "lng": -122.4074}
+        "coordinates": {"lat": 37.7771, "lng": -122.4074},
     },
     {
         "name": "[Stub] Tartine Bakery",
@@ -266,7 +326,7 @@ MOCK_PLACES: List[Dict[str, Any]] = [
         "gmaps_price_level": 2,
         "gmaps_opening_hours": "Mon-Sun: 7:30AM-7PM",
         "gmaps_review_summary": "Reviewers mention: local favorite, authentic. Matches interests: food, coffee",
-        "coordinates": {"lat": 37.7614, "lng": -122.4241}
+        "coordinates": {"lat": 37.7614, "lng": -122.4241},
     },
     {
         "name": "[Stub] Lands End Trail",
@@ -282,7 +342,7 @@ MOCK_PLACES: List[Dict[str, Any]] = [
         "gmaps_price_level": 0,
         "gmaps_opening_hours": "Sunrise to Sunset",
         "gmaps_review_summary": "Reviewers mention: hidden gem, scenic. Matches interests: outdoor",
-        "coordinates": {"lat": 37.7875, "lng": -122.5048}
+        "coordinates": {"lat": 37.7875, "lng": -122.5048},
     },
     {
         "name": "[Stub] Stern Grove",
@@ -298,7 +358,7 @@ MOCK_PLACES: List[Dict[str, Any]] = [
         "gmaps_price_level": 0,
         "gmaps_opening_hours": "Open 6AM-10PM daily",
         "gmaps_review_summary": "Reviewers mention: local favorite, unique. Matches interests: outdoor, music",
-        "coordinates": {"lat": 37.7327, "lng": -122.4710}
+        "coordinates": {"lat": 37.7327, "lng": -122.4710},
     },
     {
         "name": "[Stub] California Academy of Sciences",
@@ -314,8 +374,8 @@ MOCK_PLACES: List[Dict[str, Any]] = [
         "gmaps_price_level": 3,
         "gmaps_opening_hours": "Mon-Sat: 9:30AM-5PM; Sun: 11AM-5PM",
         "gmaps_review_summary": "Reviewers mention: one-of-a-kind, special, unique. Matches interests: art, outdoor",
-        "coordinates": {"lat": 37.7699, "lng": -122.4661}
-    }
+        "coordinates": {"lat": 37.7699, "lng": -122.4661},
+    },
 ]
 
 
@@ -333,121 +393,212 @@ MOCK_PLACES: List[Dict[str, Any]] = [
 # =============================================================================
 
 # Responses where tools were called
-MOCK_RESPONSES_WITH_TOOLS: List[Dict[str, Any]] = [
+MOCK_RESPONSES_WITH_TOOLS: list[dict[str, Any]] = [
     {
         "response": "I found some great activities for you! There's a lovely hiking trail at Sunset Ridge Park, a pottery class downtown, and a new escape room that just opened. Would you like me to save these to a spreadsheet?",
         "tool_calls": [
             {"name": "get_user_preferences", "arguments": {"user_id": "default"}},
-            {"name": "scrape_activities", "arguments": {"query": "fun activities", "location_a": "San Francisco"}}
+            {
+                "name": "scrape_activities",
+                "arguments": {"query": "fun activities", "location_a": "San Francisco"},
+            },
         ],
         "tool_results": [
-            {"tool": "get_user_preferences", "result": {"interests": ["hiking", "arts"], "location": "San Francisco"}},
-            {"tool": "scrape_activities", "result": [
-                {"name": "Sunset Ridge Park Trail", "type": "hiking", "rating": 4.5},
-                {"name": "Clay & Create Pottery", "type": "arts", "rating": 4.8},
-                {"name": "Puzzle Palace Escape Room", "type": "entertainment", "rating": 4.6}
-            ]}
-        ]
+            {
+                "tool": "get_user_preferences",
+                "result": {
+                    "interests": ["hiking", "arts"],
+                    "location": "San Francisco",
+                },
+            },
+            {
+                "tool": "scrape_activities",
+                "result": [
+                    {
+                        "name": "Sunset Ridge Park Trail",
+                        "type": "hiking",
+                        "rating": 4.5,
+                    },
+                    {"name": "Clay & Create Pottery", "type": "arts", "rating": 4.8},
+                    {
+                        "name": "Puzzle Palace Escape Room",
+                        "type": "entertainment",
+                        "rating": 4.6,
+                    },
+                ],
+            },
+        ],
     },
     {
         "response": "The weather looks perfect for outdoor activities this weekend! It'll be sunny with highs around 72°F. I'd recommend checking out the farmers market or having a picnic at Golden Gate Park.",
         "tool_calls": [
-            {"name": "get_weather_for_location", "arguments": {"location": "San Francisco, CA"}}
+            {
+                "name": "get_weather_for_location",
+                "arguments": {"location": "San Francisco, CA"},
+            }
         ],
         "tool_results": [
-            {"tool": "get_weather_for_location", "result": {
-                "location": "San Francisco, CA",
-                "temperature": 72,
-                "condition": "clear",
-                "humidity": 45,
-                "outdoor_suitable": True,
-                "outdoor_recommendation": "Great weather for outdoor activities!"
-            }}
-        ]
+            {
+                "tool": "get_weather_for_location",
+                "result": {
+                    "location": "San Francisco, CA",
+                    "temperature": 72,
+                    "condition": "clear",
+                    "humidity": 45,
+                    "outdoor_suitable": True,
+                    "outdoor_recommendation": "Great weather for outdoor activities!",
+                },
+            }
+        ],
     },
     {
         "response": "I've found some wonderful date spots between your two locations! There's a cozy wine bar, an art gallery with a new exhibit, and a rooftop restaurant with amazing views.",
         "tool_calls": [
-            {"name": "search_places_for_dates", "arguments": {
-                "location1": "San Francisco, CA",
-                "location2": "Oakland, CA",
-                "place_types": ["cafe", "restaurant", "park"]
-            }}
+            {
+                "name": "search_places_for_dates",
+                "arguments": {
+                    "location1": "San Francisco, CA",
+                    "location2": "Oakland, CA",
+                    "place_types": ["cafe", "restaurant", "park"],
+                },
+            }
         ],
         "tool_results": [
-            {"tool": "search_places_for_dates", "result": {
-                "activities": [
-                    {"name": "Vine & Dine Wine Bar", "gmaps_rating": 4.7, "category": "Restaurant"},
-                    {"name": "Modern Perspectives Gallery", "gmaps_rating": 4.4, "category": "Tourist Attraction"},
-                    {"name": "Skyline Bistro", "gmaps_rating": 4.9, "category": "Restaurant"}
-                ],
-                "search_mode": "transit_stops",
-                "count": 3
-            }}
-        ]
+            {
+                "tool": "search_places_for_dates",
+                "result": {
+                    "activities": [
+                        {
+                            "name": "Vine & Dine Wine Bar",
+                            "gmaps_rating": 4.7,
+                            "category": "Restaurant",
+                        },
+                        {
+                            "name": "Modern Perspectives Gallery",
+                            "gmaps_rating": 4.4,
+                            "category": "Tourist Attraction",
+                        },
+                        {
+                            "name": "Skyline Bistro",
+                            "gmaps_rating": 4.9,
+                            "category": "Restaurant",
+                        },
+                    ],
+                    "search_mode": "transit_stops",
+                    "count": 3,
+                },
+            }
+        ],
     },
     {
         "response": "I've saved those activities to your spreadsheet! You can access it anytime to review your saved ideas.",
         "tool_calls": [
-            {"name": "save_to_sheets", "arguments": {
-                "activities": [{"name": "Test Activity", "location": "SF"}],
-                "spreadsheet_id": "mock-sheet-id"
-            }}
+            {
+                "name": "save_to_sheets",
+                "arguments": {
+                    "activities": [{"name": "Test Activity", "location": "SF"}],
+                    "spreadsheet_id": "mock-sheet-id",
+                },
+            }
         ],
         "tool_results": [
-            {"tool": "save_to_sheets", "result": {"success": True, "rows_added": 3, "sheet_url": "https://docs.google.com/spreadsheets/d/mock123"}}
-        ]
+            {
+                "tool": "save_to_sheets",
+                "result": {
+                    "success": True,
+                    "rows_added": 3,
+                    "sheet_url": "https://docs.google.com/spreadsheets/d/mock123",
+                },
+            }
+        ],
     },
     {
         "response": "I've updated your preferences! I'll keep your love for outdoor activities and Italian food in mind for future recommendations.",
         "tool_calls": [
-            {"name": "update_user_preferences", "arguments": {
-                "user_id": "default",
-                "preferences": {"interests": ["outdoor", "food"], "cuisine": "Italian"}
-            }}
+            {
+                "name": "update_user_preferences",
+                "arguments": {
+                    "user_id": "default",
+                    "preferences": {
+                        "interests": ["outdoor", "food"],
+                        "cuisine": "Italian",
+                    },
+                },
+            }
         ],
         "tool_results": [
-            {"tool": "update_user_preferences", "result": {"updated": True, "preferences": {"interests": ["outdoor", "food"], "cuisine": "Italian"}}}
-        ]
+            {
+                "tool": "update_user_preferences",
+                "result": {
+                    "updated": True,
+                    "preferences": {
+                        "interests": ["outdoor", "food"],
+                        "cuisine": "Italian",
+                    },
+                },
+            }
+        ],
     },
     {
         "response": "Based on your preferences and the nice weather forecast, I recommend the outdoor concert series at the amphitheater this Saturday. It's supposed to be 68°F and clear skies!",
         "tool_calls": [
             {"name": "get_user_preferences", "arguments": {"user_id": "default"}},
-            {"name": "get_weather_for_location", "arguments": {"location": "San Francisco, CA"}},
-            {"name": "scrape_activities", "arguments": {"query": "outdoor concert", "location_a": "San Francisco"}}
+            {
+                "name": "get_weather_for_location",
+                "arguments": {"location": "San Francisco, CA"},
+            },
+            {
+                "name": "scrape_activities",
+                "arguments": {
+                    "query": "outdoor concert",
+                    "location_a": "San Francisco",
+                },
+            },
         ],
         "tool_results": [
-            {"tool": "get_user_preferences", "result": {"interests": ["music", "outdoor"]}},
-            {"tool": "get_weather_for_location", "result": {
-                "location": "San Francisco, CA",
-                "temperature": 68,
-                "condition": "clear",
-                "outdoor_suitable": True
-            }},
-            {"tool": "scrape_activities", "result": [
-                {"name": "Summer Concert Series", "type": "music", "date": "Saturday", "venue": "Riverside Amphitheater"}
-            ]}
-        ]
-    }
+            {
+                "tool": "get_user_preferences",
+                "result": {"interests": ["music", "outdoor"]},
+            },
+            {
+                "tool": "get_weather_for_location",
+                "result": {
+                    "location": "San Francisco, CA",
+                    "temperature": 68,
+                    "condition": "clear",
+                    "outdoor_suitable": True,
+                },
+            },
+            {
+                "tool": "scrape_activities",
+                "result": [
+                    {
+                        "name": "Summer Concert Series",
+                        "type": "music",
+                        "date": "Saturday",
+                        "venue": "Riverside Amphitheater",
+                    }
+                ],
+            },
+        ],
+    },
 ]
 
 # Responses where no tools were needed
-MOCK_RESPONSES_NO_TOOLS: List[Dict[str, Any]] = [
+MOCK_RESPONSES_NO_TOOLS: list[dict[str, Any]] = [
     {
         "response": "Great question! I'd be happy to help you find some fun things to do. What kind of activities are you interested in? Are you looking for outdoor adventures, arts and culture, food experiences, or something else?",
         "tool_calls": [],
-        "tool_results": []
+        "tool_results": [],
     },
     {
         "response": "Sure! To give you the best recommendations, could you tell me a bit about what you're in the mood for? Something active, relaxing, or maybe a mix of both?",
         "tool_calls": [],
-        "tool_results": []
+        "tool_results": [],
     },
     {
         "response": "I can help with that! Are you planning something for just yourself, a date, or a group outing? That'll help me tailor my suggestions.",
         "tool_calls": [],
-        "tool_results": []
-    }
+        "tool_results": [],
+    },
 ]
-

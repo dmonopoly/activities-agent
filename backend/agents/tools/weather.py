@@ -1,46 +1,54 @@
 """Weather tool - MCP-style tool for getting weather information"""
-from typing import Dict, Any, Optional
-import random
-import requests
+
 import os
+import random
 from datetime import datetime
+from typing import Any
+
+import requests
 
 from agents.config import ENABLE_WEATHER_API
 from agents.mock_data import MOCK_WEATHER_RESPONSES
 
 
-def get_weather_for_location(location: str, date: Optional[str] = None) -> Dict[str, Any]:
+def get_weather_for_location(
+    location: str, date: str | None = None
+) -> dict[str, Any]:
     """
     Get weather information for a location
-    
+
     Args:
         location: Location (address, city, or coordinates as "lat,lng")
         date: Optional date for weather forecast (format: "YYYY-MM-DD"). Default: current weather
-        
+
     Returns:
         Dictionary with weather data (temperature, conditions, precipitation, etc.)
     """
-    print(f"[WEATHER] get_weather_for_location called: location={location}, date={date}")
+    print(
+        f"[WEATHER] get_weather_for_location called: location={location}, date={date}"
+    )
     print(f"[WEATHER] ENABLE_WEATHER_API={ENABLE_WEATHER_API}")
-    
+
     if not ENABLE_WEATHER_API:
         mock = random.choice(MOCK_WEATHER_RESPONSES).copy()
         mock["location"] = location  # Use the requested location
         mock["timestamp"] = datetime.now().isoformat()
         mock["date"] = date or datetime.now().strftime("%Y-%m-%d")
-        print(f"[WEATHER] ❌ API DISABLED - returning MOCK data")
-        print(f"[WEATHER] Mock response: temp={mock['temperature']}°F, condition={mock['condition']}, outdoor_suitable={mock['outdoor_suitable']}")
+        print("[WEATHER] ❌ API DISABLED - returning MOCK data")
+        print(
+            f"[WEATHER] Mock response: temp={mock['temperature']}°F, condition={mock['condition']}, outdoor_suitable={mock['outdoor_suitable']}"
+        )
         return mock
-    
-    print(f"[WEATHER] ✅ API ENABLED - calling OpenWeatherMap API")
+
+    print("[WEATHER] ✅ API ENABLED - calling OpenWeatherMap API")
     api_key = os.getenv("OPENWEATHER_API_KEY")
-    
+
     if not api_key:
         return {
             "error": "OPENWEATHER_API_KEY not set. Please set it in your .env file.",
-            "location": location
+            "location": location,
         }
-    
+
     try:
         # Check if location is coordinates (lat,lng format)
         if "," in location and len(location.split(",")) == 2:
@@ -57,75 +65,86 @@ def get_weather_for_location(location: str, date: Optional[str] = None) -> Dict[
             lat_param = None
             lng_param = None
             city_param = location
-        
+
         if lat_param is not None and lng_param is not None:
             # Use coordinates
-            url = f"https://api.openweathermap.org/data/2.5/weather"
+            url = "https://api.openweathermap.org/data/2.5/weather"
             params = {
                 "lat": lat_param,
                 "lon": lng_param,
                 "appid": api_key,
-                "units": "imperial"  # Use Fahrenheit
+                "units": "imperial",  # Use Fahrenheit
             }
         else:
             # Use city name
-            url = f"https://api.openweathermap.org/data/2.5/weather"
-            params = {
-                "q": city_param,
-                "appid": api_key,
-                "units": "imperial"
-            }
-        
+            url = "https://api.openweathermap.org/data/2.5/weather"
+            params = {"q": city_param, "appid": api_key, "units": "imperial"}
+
         response = requests.get(url, params=params, timeout=10)
         response.raise_for_status()
         data = response.json()
-        
+
         weather_info = {
             "location": data.get("name", location),
             "temperature": data.get("main", {}).get("temp"),
             "feels_like": data.get("main", {}).get("feels_like"),
-            "condition": data.get("weather", [{}])[0].get("main", "").lower() if data.get("weather") else None,
-            "description": data.get("weather", [{}])[0].get("description", "") if data.get("weather") else None,
+            "condition": data.get("weather", [{}])[0].get("main", "").lower()
+            if data.get("weather")
+            else None,
+            "description": data.get("weather", [{}])[0].get("description", "")
+            if data.get("weather")
+            else None,
             "humidity": data.get("main", {}).get("humidity"),
             "wind_speed": data.get("wind", {}).get("speed"),
-            "precipitation": data.get("rain", {}).get("1h", 0) if data.get("rain") else 0,
+            "precipitation": data.get("rain", {}).get("1h", 0)
+            if data.get("rain")
+            else 0,
             "clouds": data.get("clouds", {}).get("all", 0),
             "timestamp": datetime.now().isoformat(),
-            "date": date or datetime.now().strftime("%Y-%m-%d")
+            "date": date or datetime.now().strftime("%Y-%m-%d"),
         }
-        
+
         condition = weather_info.get("condition", "")
         temp = weather_info.get("temperature")
         if temp and condition:
             if condition in ["clear", "clouds"] and 60 <= temp <= 85:
                 weather_info["outdoor_suitable"] = True
-                weather_info["outdoor_recommendation"] = "Great weather for outdoor activities!"
+                weather_info["outdoor_recommendation"] = (
+                    "Great weather for outdoor activities!"
+                )
             elif condition in ["rain", "drizzle", "thunderstorm"]:
                 weather_info["outdoor_suitable"] = False
-                weather_info["outdoor_recommendation"] = "Rainy weather - consider indoor activities"
+                weather_info["outdoor_recommendation"] = (
+                    "Rainy weather - consider indoor activities"
+                )
             elif temp < 50:
                 weather_info["outdoor_suitable"] = False
-                weather_info["outdoor_recommendation"] = "Cold weather - dress warmly or choose indoor activities"
+                weather_info["outdoor_recommendation"] = (
+                    "Cold weather - dress warmly or choose indoor activities"
+                )
             elif temp > 90:
                 weather_info["outdoor_suitable"] = False
-                weather_info["outdoor_recommendation"] = "Hot weather - stay hydrated or choose indoor activities"
+                weather_info["outdoor_recommendation"] = (
+                    "Hot weather - stay hydrated or choose indoor activities"
+                )
             else:
                 weather_info["outdoor_suitable"] = True
-                weather_info["outdoor_recommendation"] = "Weather is okay for outdoor activities"
-        
-        print(f"[WEATHER] API response: temp={weather_info.get('temperature')}°F, condition={weather_info.get('condition')}, outdoor_suitable={weather_info.get('outdoor_suitable')}")
+                weather_info["outdoor_recommendation"] = (
+                    "Weather is okay for outdoor activities"
+                )
+
+        print(
+            f"[WEATHER] API response: temp={weather_info.get('temperature')}°F, condition={weather_info.get('condition')}, outdoor_suitable={weather_info.get('outdoor_suitable')}"
+        )
         return weather_info
-        
+
     except requests.exceptions.RequestException as e:
         return {
             "error": f"Failed to fetch weather data: {str(e)}",
-            "location": location
+            "location": location,
         }
     except Exception as e:
-        return {
-            "error": f"Unexpected error: {str(e)}",
-            "location": location
-        }
+        return {"error": f"Unexpected error: {str(e)}", "location": location}
 
 
 TOOL_DEFINITION = {
@@ -138,15 +157,14 @@ TOOL_DEFINITION = {
             "properties": {
                 "location": {
                     "type": "string",
-                    "description": "Location (address, city name, or coordinates as 'lat,lng')"
+                    "description": "Location (address, city name, or coordinates as 'lat,lng')",
                 },
                 "date": {
                     "type": "string",
-                    "description": "Optional date for weather forecast (format: 'YYYY-MM-DD'). Default: current weather"
-                }
+                    "description": "Optional date for weather forecast (format: 'YYYY-MM-DD'). Default: current weather",
+                },
             },
-            "required": ["location"]
-        }
-    }
+            "required": ["location"],
+        },
+    },
 }
-
