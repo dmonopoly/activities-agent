@@ -1,14 +1,72 @@
 'use client';
 
 import Link from 'next/link';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface HeaderProps {
   userId?: string;
 }
 
+function ThemeToggle() {
+  const { preference, toggleTheme } = useTheme();
+
+  const getIcon = () => {
+    switch (preference) {
+      case 'light':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2"/>
+            <path d="M12 20v2"/>
+            <path d="m4.93 4.93 1.41 1.41"/>
+            <path d="m17.66 17.66 1.41 1.41"/>
+            <path d="M2 12h2"/>
+            <path d="M20 12h2"/>
+            <path d="m6.34 17.66-1.41 1.41"/>
+            <path d="m19.07 4.93-1.41 1.41"/>
+          </svg>
+        );
+      case 'dark':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+          </svg>
+        );
+      case 'system':
+      default:
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect width="20" height="14" x="2" y="3" rx="2"/>
+            <line x1="8" x2="16" y1="21" y2="21"/>
+            <line x1="12" x2="12" y1="17" y2="21"/>
+          </svg>
+        );
+    }
+  };
+
+  const getLabel = () => {
+    switch (preference) {
+      case 'light': return 'Light mode';
+      case 'dark': return 'Dark mode';
+      case 'system': return 'System theme';
+    }
+  };
+
+  return (
+    <button
+      onClick={toggleTheme}
+      className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+      title={getLabel()}
+      aria-label={getLabel()}
+    >
+      {getIcon()}
+    </button>
+  );
+}
+
 export default function Header({ userId }: HeaderProps) {
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+    <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="text-2xl font-bold text-[#FF385D]">
@@ -16,23 +74,21 @@ export default function Header({ userId }: HeaderProps) {
           </Link>
           <div className="flex items-center gap-6">
             <nav className="flex gap-6">
-              <Link href="/" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+              <Link href="/" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition-colors">
                 New Chat
               </Link>
-              <Link href="/history" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+              <Link href="/history" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition-colors">
                 Chat History
               </Link>
-              {/* TODO: Enable when ready <Link href="/activities" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-                Browse Activities
-              </Link> */}
-              <Link href="/preferences" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+              <Link href="/preferences" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition-colors">
                 Preferences
               </Link>
             </nav>
+            <ThemeToggle />
             {userId && (
-              <Link href="/preferences" className="flex items-center gap-2 pl-6 border-l border-gray-200 hover:opacity-80 transition-opacity">
-                <span className="text-xs text-gray-400">User:</span>
-                <span className="px-2 py-1 bg-pink-50 text-pink-700 text-xs font-medium rounded-full max-w-[150px] truncate" title={userId}>
+              <Link href="/preferences" className="flex items-center gap-2 pl-6 border-l border-gray-200 dark:border-gray-700 hover:opacity-80 transition-opacity">
+                <span className="text-xs text-gray-400 dark:text-gray-500">User:</span>
+                <span className="px-2 py-1 bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 text-xs font-medium rounded-full max-w-[150px] truncate" title={userId}>
                   {userId}
                 </span>
               </Link>

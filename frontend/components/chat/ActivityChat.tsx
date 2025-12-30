@@ -72,7 +72,7 @@ const ChatInput = ({ input, setInput, onSubmit, loading, containerClassName = ''
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Ask about activities..."
-            className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-3xl focus:outline-none focus:ring-2 focus:ring-rose-500 shadow-sm resize-none overflow-hidden min-h-[48px] max-h-[200px] leading-6"
+            className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-3xl focus:outline-none focus:ring-2 focus:ring-rose-500 shadow-sm resize-none overflow-hidden min-h-[48px] max-h-[200px] leading-6 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
             disabled={loading}
             rows={1}
           />
@@ -213,12 +213,12 @@ export default function ActivityChat({
   ];
 
   return (
-    <div className="flex flex-col h-full w-full max-w-4xl mx-auto">
+    <div className="flex flex-col h-full w-full max-w-4xl mx-auto bg-white dark:bg-gray-900">
       {!hasMessages ? (
         <>
           {/* Empty State - Header and Input positioned higher */}
-          <div className="flex-1 flex flex-col items-center justify-start pt-16 min-h-0">
-            <div className="text-center text-gray-500 mb-8">
+          <div className="flex-1 flex flex-col items-center justify-start pt-16 min-h-0 bg-white dark:bg-gray-900">
+            <div className="text-center text-gray-500 dark:text-gray-400 mb-8">
               <h2 className="text-2xl font-semibold mb-2">What can I help with?</h2>
             </div>
 
@@ -230,7 +230,7 @@ export default function ActivityChat({
                     key={idx}
                     onClick={() => handleChipClick(chip)}
                     disabled={loading}
-                    className="px-4 py-2 text-sm bg-white border border-gray-200 rounded-full hover:border-rose-300 hover:bg-rose-50 text-gray-700 hover:text-rose-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+                    className="px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full hover:border-rose-300 dark:hover:border-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 text-gray-700 dark:text-gray-300 hover:text-rose-600 dark:hover:text-rose-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
                   >
                     {chip}
                   </button>
@@ -251,7 +251,7 @@ export default function ActivityChat({
       ) : (
         <>
           {/* Messages - When conversation exists */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-white dark:bg-gray-900">
             {messages.map((message, idx) => (
               <div
                 key={idx}
@@ -261,7 +261,7 @@ export default function ActivityChat({
                   className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                     message.role === 'user'
                       ? 'bg-rose-500 text-white'
-                      : 'bg-gray-100 text-gray-900'
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
                   }`}
                 >
                   {message.role === 'assistant' ? (
@@ -275,7 +275,7 @@ export default function ActivityChat({
 
             {loading && (
               <div className="flex justify-start">
-                <div className="bg-gray-100 rounded-2xl px-4 py-3">
+                <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl px-4 py-3">
                   <div className="flex space-x-2">
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
@@ -294,7 +294,7 @@ export default function ActivityChat({
             setInput={setInput}
             onSubmit={handleSend}
             loading={loading}
-            containerClassName="sticky bottom-0 border-t border-gray-200 bg-white z-10"
+            containerClassName="sticky bottom-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 z-10"
             formClassName="p-4"
           />
         </>

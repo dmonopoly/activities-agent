@@ -53,7 +53,7 @@ export default function ChatPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900 transition-colors">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
       </div>
     );
@@ -61,13 +61,13 @@ export default function ChatPage() {
 
   if (notFound) {
     return (
-      <div className="min-h-screen bg-white flex flex-col">
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col transition-colors">
         <Header userId={userId} />
         <main className="flex-1 flex flex-col items-center justify-center">
           <div className="text-center">
             <div className="text-gray-400 text-6xl mb-4">🔍</div>
-            <h1 className="text-2xl font-semibold text-gray-900 mb-2">Chat not found</h1>
-            <p className="text-gray-600 mb-6">This conversation may have been deleted.</p>
+            <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Chat not found</h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">This conversation may have been deleted.</p>
             <Link
               href="/"
               className="inline-flex items-center px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-colors"
@@ -81,7 +81,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col transition-colors">
       <Header userId={userId} />
 
       <main className="flex-1 flex flex-col overflow-hidden">

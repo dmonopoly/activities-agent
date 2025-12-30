@@ -104,7 +104,7 @@ export default function PreferencesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex flex-col">
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col transition-colors">
         <Header userId={userId} />
         <div className="flex-1 flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
@@ -114,28 +114,28 @@ export default function PreferencesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col transition-colors">
       <Header userId={userId} />
 
       {/* Main Content */}
       <main className="flex-1 max-w-3xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
           Your Preferences
         </h1>
-        <p className="text-gray-600 mb-8">
+        <p className="text-gray-600 dark:text-gray-400 mb-8">
           Help us find the ideal activities for you!
         </p>
 
         <div className="space-y-6">
           {/* User Selector */}
-          <div className="bg-pink-50 border border-pink-100 rounded-lg p-4">
-            <label className="block text-sm font-medium text-pink-900 mb-2">
+          <div className="bg-pink-50 dark:bg-pink-900/20 border border-pink-100 dark:border-pink-800 rounded-lg p-4">
+            <label className="block text-sm font-medium text-pink-900 dark:text-pink-300 mb-2">
               Select User Profile
             </label>
             <select
               value={userId}
               onChange={(e) => handleUserChange(e.target.value)}
-              className="w-full px-4 py-2 border border-pink-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-pink-500 text-gray-900"
+              className="w-full px-4 py-2 border border-pink-200 dark:border-pink-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-pink-500 text-gray-900 dark:text-white"
             >
               {allUsers.map((id) => (
                 <option key={id} value={id}>
@@ -143,14 +143,14 @@ export default function PreferencesPage() {
                 </option>
               ))}
             </select>
-            <p className="text-xs text-pink-600 mt-2">
+            <p className="text-xs text-pink-600 dark:text-pink-400 mt-2">
               Switching users will load their saved preferences
             </p>
           </div>
 
           {/* Location */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Location
             </label>
             <input
@@ -160,13 +160,13 @@ export default function PreferencesPage() {
                 setPreferences({ ...preferences, location: e.target.value })
               }
               placeholder="City, neighborhood, or area"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500"
             />
           </div>
 
           {/* Interests */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Interests
             </label>
             <div className="flex gap-2 mb-2">
@@ -174,7 +174,7 @@ export default function PreferencesPage() {
                 id="interest-input"
                 type="text"
                 placeholder="Add an interest (e.g., outdoor, art, music)"
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     handleInterestAdd(e.currentTarget.value);
@@ -202,12 +202,12 @@ export default function PreferencesPage() {
               {(preferences.interests || []).map((interest) => (
                 <span
                   key={interest}
-                  className="inline-flex items-center gap-2 px-3 py-1 bg-pink-100 text-pink-700 rounded-full text-sm"
+                  className="inline-flex items-center gap-2 px-3 py-1 bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300 rounded-full text-sm"
                 >
                   {interest}
                   <button
                     onClick={() => handleInterestRemove(interest)}
-                    className="text-pink-700 hover:text-pink-900"
+                    className="text-pink-700 dark:text-pink-300 hover:text-pink-900 dark:hover:text-pink-100"
                   >
                     ×
                   </button>
@@ -219,7 +219,7 @@ export default function PreferencesPage() {
           {/* Budget */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Min Budget ($)
               </label>
               <input
@@ -234,11 +234,11 @@ export default function PreferencesPage() {
                   })
                 }
                 placeholder="0"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Max Budget ($)
               </label>
               <input
@@ -253,7 +253,7 @@ export default function PreferencesPage() {
                   })
                 }
                 placeholder="1000"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500"
               />
             </div>
           </div>
