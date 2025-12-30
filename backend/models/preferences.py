@@ -1,12 +1,12 @@
+
 from pydantic import BaseModel
-from typing import Optional, List
 
 
 class UserPreferences(BaseModel):
     """Model for user preferences"""
-    user_id: str
-    location: Optional[str] = None
-    interests: List[str] = []
-    budget_min: Optional[float] = None
-    budget_max: Optional[float] = None
 
+    user_id: str
+    location: str | None = None
+    interests: list[str] = []
+    budget_min: float | None = None
+    budget_max: float | None = None

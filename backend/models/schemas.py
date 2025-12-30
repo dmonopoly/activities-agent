@@ -1,23 +1,22 @@
+
 from pydantic import BaseModel
-from typing import Optional, List
-from datetime import datetime
 
 
 class Activity(BaseModel):
     name: str
     location: str
-    date: Optional[str] = None
-    description: Optional[str] = None
-    price: Optional[str] = None
-    url: Optional[str] = None
-    image_url: Optional[str] = None
+    date: str | None = None
+    description: str | None = None
+    price: str | None = None
+    url: str | None = None
+    image_url: str | None = None
 
 
 class UserPreferences(BaseModel):
     user_id: str
-    location: Optional[str] = None
-    interests: List[str] = []
-    budget: Optional[str] = None
+    location: str | None = None
+    interests: list[str] = []
+    budget: str | None = None
 
 
 class ChatMessage(BaseModel):
@@ -28,4 +27,4 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     user_id: str
-    conversation_history: List[ChatMessage] = []
+    conversation_history: list[ChatMessage] = []

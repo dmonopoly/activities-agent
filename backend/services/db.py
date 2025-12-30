@@ -12,14 +12,13 @@ Environment Variables:
 """
 
 import os
-from typing import Optional
 
 from pymongo import MongoClient
-from pymongo.database import Database
 from pymongo.collection import Collection
+from pymongo.database import Database
 
 # Client singleton (lazily initialized on first use)
-_client: Optional[MongoClient] = None
+_client: MongoClient | None = None
 
 
 def is_mongodb_enabled() -> bool:
@@ -30,10 +29,10 @@ def is_mongodb_enabled() -> bool:
 def get_mongo_client() -> MongoClient:
     """
     Get the MongoDB client singleton.
-    
+
     Returns:
         MongoClient instance
-        
+
     Raises:
         ValueError: If MONGODB_URI is not set
     """
@@ -42,7 +41,7 @@ def get_mongo_client() -> MongoClient:
         uri = os.getenv("MONGODB_URI")
         if not uri:
             raise ValueError("MONGODB_URI environment variable is not set")
-        
+
         _client = MongoClient(uri)
     return _client
 
@@ -50,7 +49,7 @@ def get_mongo_client() -> MongoClient:
 def get_database() -> Database:
     """
     Get the MongoDB database.
-    
+
     Returns:
         Database instance for the configured database name
     """
@@ -62,19 +61,21 @@ def get_database() -> Database:
 def get_user_preferences_collection() -> Collection:
     """
     Get the user preferences collection.
-    
+
     Returns:
         Collection instance for user preferences
     """
     db = get_database()
-    collection_name = os.getenv("MONGODB_USER_PREFERENCES_COLLECTION", "user_preferences")
+    collection_name = os.getenv(
+        "MONGODB_USER_PREFERENCES_COLLECTION", "user_preferences"
+    )
     return db[collection_name]
 
 
 def get_chat_history_collection() -> Collection:
     """
     Get the chat history collection.
-    
+
     Returns:
         Collection instance for chat histories
     """

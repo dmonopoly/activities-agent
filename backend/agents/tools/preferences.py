@@ -5,13 +5,12 @@ Supports two storage backends:
 - JSON files (local/preview): Used when MONGODB_URI is not set
 """
 
-from typing import Dict, Any, Optional, List
 import json
 import os
 from pathlib import Path
+from typing import Any
 
-from services.db import is_mongodb_enabled, get_user_preferences_collection
-
+from services.db import get_user_preferences_collection, is_mongodb_enabled
 
 # JSON file storage path (used when MongoDB is not enabled)
 backend_dir = Path(__file__).parent.parent.parent
@@ -23,10 +22,11 @@ PREFERENCES_FILE = DATA_DIR / "user_preferences.json"
 # Public API (Auto-selects storage backend)
 # =============================================================================
 
-def get_all_user_ids() -> List[str]:
+
+def get_all_user_ids() -> list[str]:
     """
     Get all user IDs from storage.
-    
+
     Returns:
         List of user IDs
     """
@@ -35,13 +35,13 @@ def get_all_user_ids() -> List[str]:
     return _get_all_user_ids_json()
 
 
-def get_user_preferences(user_id: str) -> Dict[str, Any]:
+def get_user_preferences(user_id: str) -> dict[str, Any]:
     """
     Get user preferences.
-    
+
     Args:
         user_id: The user's unique identifier
-        
+
     Returns:
         Dictionary containing user preferences
     """
@@ -52,39 +52,44 @@ def get_user_preferences(user_id: str) -> Dict[str, Any]:
 
 def update_user_preferences(
     user_id: str,
-    location: Optional[str] = None,
-    interests: Optional[list] = None,
-    budget_min: Optional[float] = None,
-    budget_max: Optional[float] = None
-) -> Dict[str, Any]:
+    location: str | None = None,
+    interests: list | None = None,
+    budget_min: float | None = None,
+    budget_max: float | None = None,
+) -> dict[str, Any]:
     """
     Update user preferences.
-    
+
     Args:
         user_id: The user's unique identifier
         location: Preferred location (city, neighborhood, etc.)
         interests: List of interests (e.g., ['outdoor', 'art', 'music'])
         budget_min: Minimum budget in dollars
         budget_max: Maximum budget in dollars
-        
+
     Returns:
         Updated user preferences
     """
     if is_mongodb_enabled():
-        return _update_user_preferences_mongo(user_id, location, interests, budget_min, budget_max)
-    return _update_user_preferences_json(user_id, location, interests, budget_min, budget_max)
+        return _update_user_preferences_mongo(
+            user_id, location, interests, budget_min, budget_max
+        )
+    return _update_user_preferences_json(
+        user_id, location, interests, budget_min, budget_max
+    )
 
 
 # -----------------------------------------------------------------------------
 # get_all_user_ids
 # -----------------------------------------------------------------------------
 
-def _get_all_user_ids_json() -> List[str]:
+
+def _get_all_user_ids_json() -> list[str]:
     prefs = _load_preferences_json()
     return list(prefs.keys())
 
 
-def _get_all_user_ids_mongo() -> List[str]:
+def _get_all_user_ids_mongo() -> list[str]:
     collection = get_user_preferences_collection()
     cursor = collection.find({}, {"user_id": 1})
     return [doc["user_id"] for doc in cursor if "user_id" in doc]
@@ -94,31 +99,35 @@ def _get_all_user_ids_mongo() -> List[str]:
 # get_user_preferences
 # -----------------------------------------------------------------------------
 
-def _get_user_preferences_json(user_id: str) -> Dict[str, Any]:
+
+def _get_user_preferences_json(user_id: str) -> dict[str, Any]:
     prefs = _load_preferences_json()
-    user_prefs = prefs.get(user_id, {
-        "user_id": user_id,
-        "location": None,
-        "interests": [],
-        "budget_min": None,
-        "budget_max": None
-    })
+    user_prefs = prefs.get(
+        user_id,
+        {
+            "user_id": user_id,
+            "location": None,
+            "interests": [],
+            "budget_min": None,
+            "budget_max": None,
+        },
+    )
     return user_prefs
 
 
-def _get_user_preferences_mongo(user_id: str) -> Dict[str, Any]:
+def _get_user_preferences_mongo(user_id: str) -> dict[str, Any]:
     collection = get_user_preferences_collection()
     doc = collection.find_one({"user_id": user_id})
-    
+
     if doc is None:
         return {
             "user_id": user_id,
             "location": None,
             "interests": [],
             "budget_min": None,
-            "budget_max": None
+            "budget_max": None,
         }
-    
+
     # Remove MongoDB _id field
     doc.pop("_id", None)
     return doc
@@ -128,13 +137,14 @@ def _get_user_preferences_mongo(user_id: str) -> Dict[str, Any]:
 # update_user_preferences
 # -----------------------------------------------------------------------------
 
+
 def _update_user_preferences_json(
     user_id: str,
-    location: Optional[str] = None,
-    interests: Optional[list] = None,
-    budget_min: Optional[float] = None,
-    budget_max: Optional[float] = None
-) -> Dict[str, Any]:
+    location: str | None = None,
+    interests: list | None = None,
+    budget_min: float | None = None,
+    budget_max: float | None = None,
+) -> dict[str, Any]:
     prefs = _load_preferences_json()
     if user_id not in prefs:
         prefs[user_id] = {
@@ -142,9 +152,9 @@ def _update_user_preferences_json(
             "location": None,
             "interests": [],
             "budget_min": None,
-            "budget_max": None
+            "budget_max": None,
         }
-    
+
     # Update only provided (non-None) fields
     if location is not None:
         prefs[user_id]["location"] = location
@@ -154,20 +164,20 @@ def _update_user_preferences_json(
         prefs[user_id]["budget_min"] = budget_min
     if budget_max is not None:
         prefs[user_id]["budget_max"] = budget_max
-    
+
     _save_preferences_json(prefs)
     return prefs[user_id]
 
 
 def _update_user_preferences_mongo(
     user_id: str,
-    location: Optional[str] = None,
-    interests: Optional[list] = None,
-    budget_min: Optional[float] = None,
-    budget_max: Optional[float] = None
-) -> Dict[str, Any]:
+    location: str | None = None,
+    interests: list | None = None,
+    budget_min: float | None = None,
+    budget_max: float | None = None,
+) -> dict[str, Any]:
     collection = get_user_preferences_collection()
-    
+
     # Build update document with only non-None fields
     update_fields = {}
     if location is not None:
@@ -178,7 +188,7 @@ def _update_user_preferences_mongo(
         update_fields["budget_min"] = budget_min
     if budget_max is not None:
         update_fields["budget_max"] = budget_max
-    
+
     # Always upsert to ensure user exists (matches JSON behavior)
     # $setOnInsert sets defaults only when creating a new document
     collection.update_one(
@@ -190,12 +200,12 @@ def _update_user_preferences_mongo(
                 "location": None,
                 "interests": [],
                 "budget_min": None,
-                "budget_max": None
-            }
+                "budget_max": None,
+            },
         },
-        upsert=True
+        upsert=True,
     )
-    
+
     return _get_user_preferences_mongo(user_id)
 
 
@@ -203,37 +213,37 @@ def seed_preferences_from_json_if_empty() -> bool:
     """
     Seed MongoDB user preferences collection from JSON file if MongoDB
     user preferences collection is empty.
-    
+
     Used during production startup to initialize the database with
     predefined user profiles.
-    
+
     Returns:
         True if seeding was performed, False if collection already had data
     """
     if not is_mongodb_enabled():
         return False
-    
+
     try:
         collection = get_user_preferences_collection()
-        
+
         if collection.count_documents({}) > 0:
             print("[SEED] MongoDB collection already has data, skipping seed")
             return False
-        
+
         prefs = _load_preferences_json()
         if not prefs:
             print("[SEED] WARNING: JSON file is empty, nothing to seed")
             return False
-        
+
         documents = []
         for user_id, user_prefs in prefs.items():
             doc = {**user_prefs, "user_id": user_id}
             documents.append(doc)
-        
+
         collection.insert_many(documents)
         print(f"[SEED] Successfully seeded {len(documents)} user preferences from JSON")
         return True
-    
+
     except Exception as e:
         print(f"[SEED] ERROR during MongoDB seeding: {e}")
         # Don't crash the app on seed failure - it can still work without initial data
@@ -244,18 +254,19 @@ def seed_preferences_from_json_if_empty() -> bool:
 # Other private helpers (JSON file I/O)
 # -----------------------------------------------------------------------------
 
-def _load_preferences_json() -> Dict[str, Dict[str, Any]]:
+
+def _load_preferences_json() -> dict[str, dict[str, Any]]:
     """Load preferences from JSON file"""
     if os.path.exists(PREFERENCES_FILE):
-        with open(PREFERENCES_FILE, 'r') as f:
+        with open(PREFERENCES_FILE) as f:
             return json.load(f)
     return {}
 
 
-def _save_preferences_json(prefs: Dict[str, Dict[str, Any]]):
+def _save_preferences_json(prefs: dict[str, dict[str, Any]]):
     """Save preferences to JSON file"""
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    with open(PREFERENCES_FILE, 'w') as f:
+    with open(PREFERENCES_FILE, "w") as f:
         json.dump(prefs, f, indent=2)
 
 
@@ -274,12 +285,12 @@ TOOL_DEFINITIONS = [
                 "properties": {
                     "user_id": {
                         "type": "string",
-                        "description": "The user's unique identifier"
+                        "description": "The user's unique identifier",
                     }
                 },
-                "required": ["user_id"]
-            }
-        }
+                "required": ["user_id"],
+            },
+        },
     },
     {
         "type": "function",
@@ -291,28 +302,28 @@ TOOL_DEFINITIONS = [
                 "properties": {
                     "user_id": {
                         "type": "string",
-                        "description": "The user's unique identifier"
+                        "description": "The user's unique identifier",
                     },
                     "location": {
                         "type": "string",
-                        "description": "Preferred location (city, neighborhood, etc.)"
+                        "description": "Preferred location (city, neighborhood, etc.)",
                     },
                     "interests": {
                         "type": "array",
                         "items": {"type": "string"},
-                        "description": "List of interests (e.g., ['outdoor', 'art', 'music'])"
+                        "description": "List of interests (e.g., ['outdoor', 'art', 'music'])",
                     },
                     "budget_min": {
                         "type": "number",
-                        "description": "Minimum budget in dollars"
+                        "description": "Minimum budget in dollars",
                     },
                     "budget_max": {
                         "type": "number",
-                        "description": "Maximum budget in dollars"
-                    }
+                        "description": "Maximum budget in dollars",
+                    },
                 },
-                "required": ["user_id"]
-            }
-        }
-    }
+                "required": ["user_id"],
+            },
+        },
+    },
 ]

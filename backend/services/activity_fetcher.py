@@ -1,7 +1,8 @@
 """Activity Fetcher Service: Fetches activities using shared google_maps tool with user preferences"""
-from typing import Dict, Any, Optional, List
+
 import sys
 from pathlib import Path
+from typing import Any
 
 # Add backend directory to path for imports
 backend_dir = Path(__file__).parent.parent
@@ -9,7 +10,6 @@ sys.path.insert(0, str(backend_dir))
 
 from agents.tools.google_maps import search_places_for_dates
 from agents.tools.preferences import get_user_preferences
-
 
 # Map interests to Google Maps place types
 INTEREST_TO_PLACE_TYPES = {
@@ -32,10 +32,10 @@ INTEREST_TO_PLACE_TYPES = {
 DEFAULT_PLACE_TYPES = ["cafe", "restaurant", "park", "tourist_attraction"]
 
 
-def _budget_to_price_level(budget_max: Optional[float]) -> Optional[int]:
+def _budget_to_price_level(budget_max: float | None) -> int | None:
     """
     Map budget to Google Maps price level (0-4).
-    
+
     Price levels:
     - 0: Free
     - 1: Inexpensive (~$10-15)
@@ -45,7 +45,7 @@ def _budget_to_price_level(budget_max: Optional[float]) -> Optional[int]:
     """
     if budget_max is None:
         return None
-    
+
     if budget_max <= 0:
         return 0
     elif budget_max <= 15:
@@ -58,11 +58,11 @@ def _budget_to_price_level(budget_max: Optional[float]) -> Optional[int]:
         return 4
 
 
-def _interests_to_place_types(interests: Optional[List[str]]) -> List[str]:
+def _interests_to_place_types(interests: list[str] | None) -> list[str]:
     """Convert user interests to Google Maps place types."""
     if not interests:
         return DEFAULT_PLACE_TYPES
-    
+
     place_types = set()
     for interest in interests:
         interest_lower = interest.lower()
@@ -71,14 +71,14 @@ def _interests_to_place_types(interests: Optional[List[str]]) -> List[str]:
         else:
             # Try using the interest directly as a place type
             place_types.add(interest_lower.replace(" ", "_"))
-    
+
     return list(place_types) if place_types else DEFAULT_PLACE_TYPES
 
 
-def _format_activity_for_sheets(activity: Dict[str, Any]) -> Dict[str, Any]:
+def _format_activity_for_sheets(activity: dict[str, Any]) -> dict[str, Any]:
     """
     Format an activity to be compatible with Google Sheets export.
-    
+
     Ensures the activity has the required fields:
     name, location, description, price, date, category, url
     """
@@ -98,39 +98,37 @@ def _format_activity_for_sheets(activity: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def fetch_activities(
-    location_a: str,
-    location_b: Optional[str],
-    user_id: str
-) -> Dict[str, Any]:
+    location_a: str, location_b: str | None, user_id: str
+) -> dict[str, Any]:
     """
     Fetch activities based on one or two locations and user preferences.
-    
+
     This is a thin wrapper around search_places_for_dates that:
     1. Loads user preferences automatically
     2. Converts preferences to search parameters
     3. Formats results for sheets compatibility
-    
+
     The underlying search_places_for_dates intelligently chooses:
     - Transit stops approach for cities with public transit (NYC, SF, etc.)
     - Midpoint approach for car-centric areas
-    
+
     Args:
         location_a: First location (required)
         location_b: Second location (optional)
         user_id: User ID for fetching preferences
-        
+
     Returns:
         Dictionary with activities and metadata
     """
     prefs = get_user_preferences(user_id)
-    
+
     interests = prefs.get("interests", [])
     budget_max = prefs.get("budget_max")
-    
+
     # Convert preferences to Google Maps parameters
     place_types = _interests_to_place_types(interests)
     price_level = _budget_to_price_level(budget_max)
-    
+
     # Use the unified search function (handles transit vs midpoint internally)
     result = search_places_for_dates(
         location1=location_a,
@@ -139,20 +137,22 @@ def fetch_activities(
         price_level=price_level,
         min_rating=4.0,
         radius=0.5,
-        user_interests=interests
+        user_interests=interests,
     )
-    
+
     if result.get("error"):
         return {
             "activities": [],
             "error": result["error"],
             "location_a": location_a,
-            "location_b": location_b
+            "location_b": location_b,
         }
-    
+
     # Format for sheets compatibility
-    formatted_activities = [_format_activity_for_sheets(a) for a in result.get("activities", [])]
-    
+    formatted_activities = [
+        _format_activity_for_sheets(a) for a in result.get("activities", [])
+    ]
+
     return {
         "activities": formatted_activities,
         "search_mode": result.get("search_mode"),
@@ -163,8 +163,7 @@ def fetch_activities(
             "interests": interests,
             "budget_max": budget_max,
             "place_types": place_types,
-            "price_level": price_level
+            "price_level": price_level,
         },
-        "total_count": len(formatted_activities)
+        "total_count": len(formatted_activities),
     }
-

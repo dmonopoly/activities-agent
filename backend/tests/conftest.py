@@ -1,6 +1,8 @@
 """Pytest configuration and shared test setup"""
+
 import sys
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 # Load environment variables first (before any imports that need them)
@@ -14,4 +16,3 @@ load_dotenv(dotenv_path=env_path)
 # In production code, we use relative imports instead
 if str(backend_dir) not in sys.path:
     sys.path.insert(0, str(backend_dir))
-
