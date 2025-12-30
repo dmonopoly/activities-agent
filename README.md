@@ -261,6 +261,33 @@ pytest tests/ -v -s
 
 **Note**: Tests require an `OPENROUTER_API_KEY` environment variable to be set, as they make real API calls to test the orchestrator's tool calling functionality.
 
+## Continuous Integration
+
+GitHub Actions runs automatically on pull requests and pushes to `main`:
+
+| Job | Checks |
+|-----|--------|
+| **Backend** | `ruff format --check`, `ruff check`, `pytest` |
+| **Frontend** | `prettier --check`, `eslint`, `next build` |
+
+### Setting Up Branch Protection
+
+To require CI to pass before merging:
+
+1. Go to **Settings → Branches → Add branch protection rule**
+2. Branch name pattern: `main`
+3. Enable:
+   - ☑️ Require a pull request before merging
+   - ☑️ Require status checks to pass before merging
+   - Select: `Backend (Python)`, `Frontend (Next.js)`
+4. Save changes
+
+### Required Secrets
+
+Add these secrets in **Settings → Secrets and variables → Actions**:
+
+- `OPENROUTER_API_KEY` - Required for backend tests to run
+
 ## Environment Variables
 
 ### Backend (.env)
