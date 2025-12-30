@@ -1,24 +1,57 @@
 @import "tailwindcss";
 
+/* Light mode (default) */
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --card-background: #ffffff;
+  --card-border: #e5e7eb;
+  --muted: #6b7280;
+  --muted-foreground: #9ca3af;
+}
+
+/* Dark mode */
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --card-background: #171717;
+  --card-border: #374151;
+  --muted: #9ca3af;
+  --muted-foreground: #6b7280;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card-background: var(--card-background);
+  --color-card-border: var(--card-border);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
+/* Enable class-based dark mode */
+@custom-variant dark (&:where(.dark, .dark *));
+
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  font-family:
+    var(--font-geist-sans),
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    "Roboto",
+    "Oxygen",
+    "Ubuntu",
+    "Cantarell",
+    sans-serif;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
-/* Airbnb-inspired styling */
 .line-clamp-1 {
   display: -webkit-box;
   -webkit-line-clamp: 1;
@@ -32,3 +65,13 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/*
+ * Form fields use pink-500/600 for focus rings and accents.
+ * To change to rose (unified branding), find-replace in preferences/page.tsx and activities/page.tsx:
+ *   pink-500 → rose-500
+ *   pink-600 → rose-600
+ *   pink-700 → rose-700
+ *   pink-100 → rose-100
+ *   pink-50  → rose-50
+ */

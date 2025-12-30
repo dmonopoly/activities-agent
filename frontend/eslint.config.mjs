@@ -1,7 +1,7 @@
-import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import eslintConfigPrettier from "eslint-config-prettier";
+import { defineConfig, globalIgnores } from "eslint/config";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -16,16 +16,15 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
   ]),
   {
-    files: ['**/**'],
+    files: ["**/**"],
     rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-require-imports': 'off',
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-require-imports": "off",
     },
   },
 ]);
 
 export default eslintConfig;
-
 
 // import { dirname } from 'path'
 // import { fileURLToPath } from 'url'
