@@ -41,6 +41,9 @@ VERCEL_PREVIEW_URL_REGEX = r"https://activities-agent-frontend-.*\.vercel\.app"
 cors_origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://localhost:8081",
+    "http://127.0.0.1:8081",
+    "https://superinquisitive-chester-unvillainous.ngrok-free.app",
     PRODUCTION_URL,
 ]
 
