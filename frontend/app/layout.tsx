@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+
 import { ThemeProvider } from "@/contexts/ThemeContext";
+
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,7 +17,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Activities Agent - Discover Fun Activities & Date Ideas",
-  description: "AI-powered agent to discover personalized activities and date ideas",
+  description:
+    "AI-powered agent to discover personalized activities and date ideas",
 };
 
 export default function RootLayout({
@@ -28,9 +31,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

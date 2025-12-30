@@ -1,22 +1,26 @@
 "use client";
 
-import ActivityChat from '@/components/chat/ActivityChat';
-import Header from '@/components/ui/Header';
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+import ActivityChat from "@/components/chat/ActivityChat";
+import Header from "@/components/ui/Header";
 
 export default function Home() {
   const router = useRouter();
-  const [userId, setUserId] = useState<string>('');
+  const [userId, setUserId] = useState<string>("");
 
   useEffect(() => {
-    const id = localStorage.getItem('userId') || '';
+    const id = localStorage.getItem("userId") || "";
     setUserId(id);
   }, []);
 
-  const handleHistoryChange = useCallback((newHistoryId: string) => {
-    router.push(`/c/${newHistoryId}`);
-  }, [router]);
+  const handleHistoryChange = useCallback(
+    (newHistoryId: string) => {
+      router.push(`/c/${newHistoryId}`);
+    },
+    [router]
+  );
 
   // if (!userId) {
   //   return (
@@ -33,14 +37,11 @@ export default function Home() {
   // }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col transition-colors">
+    <div className="flex min-h-screen flex-col bg-white transition-colors dark:bg-gray-900">
       <Header userId={userId} />
 
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <ActivityChat 
-          userId={userId} 
-          onHistoryChange={handleHistoryChange}
-        />
+      <main className="flex flex-1 flex-col overflow-hidden">
+        <ActivityChat userId={userId} onHistoryChange={handleHistoryChange} />
       </main>
     </div>
   );

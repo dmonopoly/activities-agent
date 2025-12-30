@@ -3,14 +3,17 @@
   "singleQuote": false,
   "tabWidth": 2,
   "trailingComma": "es5",
-  "plugins": ["@ianvs/prettier-plugin-sort-imports"],
+  "plugins": [
+    "@ianvs/prettier-plugin-sort-imports",
+    "prettier-plugin-tailwindcss"
+  ],
   "importOrder": [
     "^react$",
     "^next",
     "<THIRD_PARTY_MODULES>",
+    "",
     "^@/(.*)$",
     "^[./]"
   ],
-  "importOrderSeparation": true,
-  "importOrderSortSpecifiers": true
+  "importOrderTypeScriptVersion": "5.0.0"
 }
