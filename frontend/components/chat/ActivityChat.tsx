@@ -183,13 +183,11 @@ export default function ActivityChat({
         setMessages(finalMessages);
       }
 
-      // Extract activities from tool results if any
       const activities = response.tool_results?.find(
         (tr) => tr.tool === "scrape_activities"
       )?.result?.activities;
 
       if (activities && activities.length > 0) {
-        // Display activities as cards
         finalMessages = [
           ...finalMessages,
           {
