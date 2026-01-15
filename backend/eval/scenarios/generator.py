@@ -309,7 +309,8 @@ class ScenarioGenerator:
         else:
             query = template.format(region1=region1_name, region2=region2_name)
         
-        # Combine places from both regions
+        # Combine places from both regions. Note: This does not actually use places between the two
+        # regions; it just combines for simplicity.
         places1 = self._select_places_for_scenario(region1_id, count=3)
         places2 = self._select_places_for_scenario(region2_id, count=3)
         places = places1 + places2
