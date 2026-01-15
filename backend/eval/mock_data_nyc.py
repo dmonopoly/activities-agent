@@ -251,6 +251,13 @@ MOCK_TRANSIT_STOPS_NYC: dict[str, list[dict[str, Any]]] = {
         {"name": "Bergen St", "lat": 40.6809, "lng": -73.9752, "type": "SUBWAY", "line_name": "2/3"},
         {"name": "Atlantic Ave-Barclays Ctr", "lat": 40.6846, "lng": -73.9780, "type": "SUBWAY", "line_name": "2/3/4/5/B/D/N/Q/R"},
     ],
+    "park_slope": [
+        {"name": "7th Ave", "lat": 40.6700, "lng": -73.9803, "type": "SUBWAY", "line_name": "F/G"},
+        {"name": "15th St-Prospect Park", "lat": 40.6603, "lng": -73.9796, "type": "SUBWAY", "line_name": "F/G"},
+        {"name": "4th Ave-9th St", "lat": 40.6706, "lng": -73.9889, "type": "SUBWAY", "line_name": "F/G/R"},
+        {"name": "Grand Army Plaza", "lat": 40.6752, "lng": -73.9709, "type": "SUBWAY", "line_name": "2/3"},
+        {"name": "Union St", "lat": 40.6773, "lng": -73.9831, "type": "SUBWAY", "line_name": "R"},
+    ],
 }
 
 
@@ -362,6 +369,33 @@ ATOMIC_REGIONS: dict[str, list[dict[str, Any]]] = {
         _make_place("Olmsted", "659 Vanderbilt Ave, Brooklyn, NY 11238", 40.6788, -73.9687, "Restaurant", 4.6, 3, "Garden-to-table dining with backyard farm", "Tue-Sun: 5:30PM-10PM"),
         _make_place("Bergen Bagels", "754 Washington Ave, Brooklyn, NY 11238", 40.6732, -73.9648, "Bakery", 4.4, 1, "Classic NY bagels and breakfast", "Mon-Sun: 6AM-4PM"),
         _make_place("The Meat Hook", "495 Lorimer St, Brooklyn, NY 11211", 40.7141, -73.9505, "Shop", 4.5, 2, "Whole-animal butcher with sandwiches", "Mon-Sat: 10AM-8PM"),
+    ],
+    
+    "park_slope": [
+        _make_place("Prospect Park", "Prospect Park West, Brooklyn, NY 11215", 40.6602, -73.9690, "Park", 4.8, 0, "526-acre Olmsted & Vaux masterpiece with lake, meadows, and zoo", "Open 5AM-1AM"),
+        _make_place("Grand Army Plaza", "Grand Army Plaza, Brooklyn, NY 11238", 40.6742, -73.9708, "Landmark", 4.5, 0, "Monumental arch and fountain at park entrance", "Open 24 hours"),
+        _make_place("Al di Là Trattoria", "248 5th Ave, Brooklyn, NY 11215", 40.6762, -73.9819, "Restaurant", 4.6, 3, "Beloved Northern Italian with legendary pastas", "Wed-Mon: 5:30PM-10PM"),
+        _make_place("Buttermilk Channel", "524 Court St, Brooklyn, NY 11231", 40.6762, -73.9996, "Restaurant", 4.5, 3, "Comfort food with famous fried chicken", "Tue-Sun: 10AM-10PM"),
+        _make_place("Miriam", "79 5th Ave, Brooklyn, NY 11217", 40.6807, -73.9784, "Restaurant", 4.5, 2, "Israeli-Mediterranean brunch favorite", "Mon-Sun: 9AM-10PM"),
+        _make_place("Winner", "281 5th Ave, Brooklyn, NY 11215", 40.6741, -73.9830, "Restaurant", 4.4, 2, "Brooklyn Bread Lab spinoff with creative bakes", "Mon-Sun: 8AM-4PM"),
+        _make_place("Café Regular", "318 11th St, Brooklyn, NY 11215", 40.6664, -73.9815, "Cafe", 4.6, 1, "Tiny Parisian-style espresso bar", "Mon-Sun: 7AM-7PM"),
+        _make_place("Southside Coffee", "652 6th Ave, Brooklyn, NY 11215", 40.6610, -73.9858, "Cafe", 4.5, 1, "Neighborhood coffee shop with great pastries", "Mon-Sun: 7AM-6PM"),
+        _make_place("Konditori", "160 7th Ave, Brooklyn, NY 11215", 40.6729, -73.9772, "Cafe", 4.4, 2, "Swedish coffee house with cardamom buns", "Mon-Sun: 7AM-7PM"),
+        _make_place("Gorilla Coffee", "97 5th Ave, Brooklyn, NY 11217", 40.6800, -73.9790, "Cafe", 4.3, 2, "Local roaster since 2002", "Mon-Sun: 7AM-7PM"),
+        _make_place("Barclays Center", "620 Atlantic Ave, Brooklyn, NY 11217", 40.6826, -73.9754, "Arena", 4.4, 3, "Brooklyn Nets arena with concerts and events", "Varies by event"),
+        _make_place("Park Slope Food Coop", "782 Union St, Brooklyn, NY 11215", 40.6756, -73.9769, "Shop", 4.4, 1, "Member-owned organic grocery cooperative", "Mon-Sun: 8AM-10PM"),
+        _make_place("Community Bookstore", "143 7th Ave, Brooklyn, NY 11215", 40.6736, -73.9768, "Bookstore", 4.7, 2, "Beloved independent bookshop since 1971", "Mon-Sun: 10AM-9PM"),
+        _make_place("Unnameable Books", "600 Vanderbilt Ave, Brooklyn, NY 11238", 40.6802, -73.9690, "Bookstore", 4.6, 1, "Used bookstore treasure trove", "Mon-Sun: 11AM-9PM"),
+        _make_place("Beacon's Closet", "92 5th Ave, Brooklyn, NY 11217", 40.6803, -73.9787, "Shop", 4.3, 2, "Vintage and consignment clothing", "Mon-Sun: 11AM-8PM"),
+        _make_place("Ample Hills Creamery", "305 Nevins St, Brooklyn, NY 11215", 40.6770, -73.9861, "Dessert", 4.5, 2, "Creative ice cream flavors in fun space", "Mon-Sun: 12PM-10PM"),
+        _make_place("Blue Marble Ice Cream", "186 Underhill Ave, Brooklyn, NY 11238", 40.6796, -73.9662, "Dessert", 4.5, 2, "Organic ice cream with unique flavors", "Mon-Sun: 12PM-10PM"),
+        _make_place("Smiling Pizza", "323 7th Ave, Brooklyn, NY 11215", 40.6683, -73.9803, "Restaurant", 4.3, 1, "Classic NY slice joint", "Mon-Sun: 11AM-11PM"),
+        _make_place("Purity Diner", "43 Underhill Ave, Brooklyn, NY 11238", 40.6811, -73.9668, "Restaurant", 4.2, 1, "Old-school diner vibes", "Mon-Sun: 7AM-10PM"),
+        _make_place("Bar Tano", "457 3rd Ave, Brooklyn, NY 11215", 40.6727, -73.9907, "Bar", 4.5, 2, "Italian wine bar with small plates", "Tue-Sun: 5PM-12AM"),
+        _make_place("The Gate", "321 5th Ave, Brooklyn, NY 11215", 40.6725, -73.9841, "Bar", 4.4, 2, "Beloved beer bar with huge garden", "Mon-Sun: 12PM-4AM"),
+        _make_place("Union Hall", "702 Union St, Brooklyn, NY 11215", 40.6753, -73.9785, "Bar", 4.3, 2, "Library bar with bocce and live music", "Mon-Sun: 4PM-4AM"),
+        _make_place("Littlefield", "635 Sackett St, Brooklyn, NY 11217", 40.6772, -73.9832, "Venue", 4.4, 2, "Indie music and comedy venue", "Varies by show"),
+        _make_place("Old Stone House", "336 3rd St, Brooklyn, NY 11215", 40.6705, -73.9808, "Museum", 4.4, 0, "Revolutionary War site with rotating exhibits", "Sat-Sun: 11AM-4PM"),
     ],
     
     # ==========================================================================
@@ -536,12 +570,13 @@ COMPOSITE_REGIONS: dict[str, list[str]] = {
     "southern_manhattan": ["fidi", "tribeca", "soho", "les"],
     "midtown": ["midtown_west", "midtown_east", "chelsea"],
     "north_brooklyn": ["greenpoint", "williamsburg", "east_williamsburg"],
-    "downtown_brooklyn": ["dumbo", "brooklyn_heights", "prospect_heights"],
+    "downtown_brooklyn": ["dumbo", "brooklyn_heights", "prospect_heights", "park_slope"],
+    "prospect_park_area": ["park_slope", "prospect_heights"],
     
     # Borough-level
     "brooklyn": [
         "greenpoint", "williamsburg", "east_williamsburg", "south_williamsburg",
-        "dumbo", "brooklyn_heights", "prospect_heights"
+        "dumbo", "brooklyn_heights", "prospect_heights", "park_slope"
     ],
     "manhattan": [
         "fidi", "tribeca", "soho", "les", "east_village", "chelsea",
@@ -568,6 +603,7 @@ REGION_BOUNDS: dict[str, tuple[float, float, float, float]] = {
     "dumbo": (40.695, 40.710, -74.000, -73.980),
     "brooklyn_heights": (40.690, 40.705, -74.000, -73.985),
     "prospect_heights": (40.665, 40.685, -73.980, -73.960),
+    "park_slope": (40.655, 40.685, -74.000, -73.965),
     "fidi": (40.700, 40.715, -74.020, -74.000),
     "tribeca": (40.710, 40.725, -74.015, -74.000),
     "soho": (40.718, 40.730, -74.010, -73.990),
