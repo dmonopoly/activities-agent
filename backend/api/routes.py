@@ -94,10 +94,9 @@ async def get_preferences(user_id: str):
 @router.put("/preferences/{user_id}")
 async def update_preferences(user_id: str, preferences: PreferencesUpdate):
     """Update user preferences"""
-    print(f"[DEBUG][/preferences/{user_id}] Updating preferences: {preferences}")
+    print(f"[INFO][/preferences/{user_id}] Updating preferences: {preferences}")
     try:
         prefs_dict = preferences.dict(exclude_unset=True)
-        print(f"[DEBUG][/preferences/{user_id}] prefs_dict: {prefs_dict}")
         # Unpack dictionary as keyword arguments to match new function signature
         updated = update_user_preferences(user_id=user_id, **prefs_dict)
         return updated

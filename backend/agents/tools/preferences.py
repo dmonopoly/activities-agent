@@ -192,21 +192,26 @@ def _update_user_preferences_mongo(
     print(f"[DEBUG][_update_user_preferences_mongo] user_id: {user_id}, update_fields: {update_fields}, collection: {collection}")
     # Always upsert to ensure user exists (matches JSON behavior)
     # $setOnInsert sets defaults only when creating a new document
-    collection.update_one(
-        {"user_id": user_id},
-        {
-            "$set": update_fields,
-            "$setOnInsert": {
-                "user_id": user_id,
-                "location": None,
-                "interests": [],
-                "budget_min": None,
-                "budget_max": None,
+    try:
+        collection.update_one(
+            {"user_id": user_id},
+            {
+                "$set": update_fields,
+                "$setOnInsert": {
+                    "user_id": user_id,
+                    "location": None,
+                    "interests": [],
+                    "budget_min": None,
+                    "budget_max": None,
+                },
             },
-        },
-        upsert=True,
-    )
+            upsert=True,
+        )
+    except Exception as e:
+        print(f"[ERROR][_update_user_preferences_mongo] Exception: {e}")
+        raise e
 
+    print(f"[DEBUG][_update_user_preferences_mongo] user_id: {user_id}; finished upserting")
     return _get_user_preferences_mongo(user_id)
 
 
