@@ -108,7 +108,7 @@ export default function PreferencesPage() {
       <div className="flex min-h-screen flex-col bg-white transition-colors dark:bg-gray-900">
         <Header userId={userId} />
         <div className="flex flex-1 items-center justify-center">
-          <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-pink-600"></div>
+          <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-rose-600"></div>
         </div>
       </div>
     );
@@ -129,14 +129,14 @@ export default function PreferencesPage() {
 
         <div className="space-y-6">
           {/* User Selector */}
-          <div className="rounded-lg border border-pink-100 bg-pink-50 p-4 dark:border-pink-800 dark:bg-pink-900/20">
-            <label className="mb-2 block text-sm font-medium text-pink-900 dark:text-pink-300">
+          <div className="rounded-lg border border-rose-100 bg-rose-50 p-4 dark:border-rose-800 dark:bg-rose-900/20">
+            <label className="mb-2 block text-sm font-medium text-rose-900 dark:text-rose-300">
               Select User Profile
             </label>
             <select
               value={userId}
               onChange={(e) => handleUserChange(e.target.value)}
-              className="w-full rounded-lg border border-pink-200 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-pink-500 focus:outline-none dark:border-pink-700 dark:bg-gray-800 dark:text-white"
+              className="w-full rounded-lg border border-rose-200 bg-white px-4 py-2 text-gray-900 focus:ring-2 focus:ring-rose-500 focus:outline-none dark:border-rose-700 dark:bg-gray-800 dark:text-white"
             >
               {allUsers.map((id) => (
                 <option key={id} value={id}>
@@ -144,7 +144,7 @@ export default function PreferencesPage() {
                 </option>
               ))}
             </select>
-            <p className="mt-2 text-xs text-pink-600 dark:text-pink-400">
+            <p className="mt-2 text-xs text-rose-600 dark:text-rose-400">
               Switching users will load their saved preferences
             </p>
           </div>
@@ -161,7 +161,7 @@ export default function PreferencesPage() {
                 setPreferences({ ...preferences, location: e.target.value })
               }
               placeholder="City, neighborhood, or area"
-              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-pink-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
+              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-rose-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
             />
           </div>
 
@@ -175,7 +175,7 @@ export default function PreferencesPage() {
                 id="interest-input"
                 type="text"
                 placeholder="Add an interest (e.g., outdoor, art, music)"
-                className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-pink-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
+                className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-rose-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     handleInterestAdd(e.currentTarget.value);
@@ -194,7 +194,7 @@ export default function PreferencesPage() {
                     input.value = "";
                   }
                 }}
-                className="rounded-lg bg-pink-600 px-4 py-2 text-white transition-colors hover:bg-pink-700"
+                className="rounded-lg bg-rose-600 px-4 py-2 text-white transition-colors hover:bg-rose-700"
               >
                 Add
               </button>
@@ -203,12 +203,12 @@ export default function PreferencesPage() {
               {(preferences.interests || []).map((interest) => (
                 <span
                   key={interest}
-                  className="inline-flex items-center gap-2 rounded-full bg-pink-100 px-3 py-1 text-sm text-pink-700 dark:bg-pink-900/40 dark:text-pink-300"
+                  className="inline-flex items-center gap-2 rounded-full bg-rose-100 px-3 py-1 text-sm text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
                 >
                   {interest}
                   <button
                     onClick={() => handleInterestRemove(interest)}
-                    className="text-pink-700 hover:text-pink-900 dark:text-pink-300 dark:hover:text-pink-100"
+                    className="text-rose-700 hover:text-rose-900 dark:text-rose-300 dark:hover:text-rose-100"
                   >
                     ×
                   </button>
@@ -235,7 +235,7 @@ export default function PreferencesPage() {
                   })
                 }
                 placeholder="0"
-                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-pink-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-rose-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
               />
             </div>
             <div>
@@ -254,7 +254,7 @@ export default function PreferencesPage() {
                   })
                 }
                 placeholder="1000"
-                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-pink-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-rose-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500"
               />
             </div>
           </div>
@@ -264,7 +264,7 @@ export default function PreferencesPage() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className={`w-full rounded-lg bg-pink-600 px-6 py-3 font-medium text-white transition-colors hover:bg-pink-700 disabled:cursor-not-allowed disabled:opacity-50 ${
+              className={`w-full rounded-lg bg-rose-600 px-6 py-3 font-medium text-white transition-colors hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50 ${
                 saved ? "bg-green-600 hover:bg-green-700" : ""
               }`}
             >

@@ -39,14 +39,14 @@ The core initial focus is to recommend activities between two locations to help 
 ### Prerequisites
 
 - Node.js 18+ and bun
-- Python 3.9+
+- Python 3.13
 - OpenRouter API key ([get one here](https://openrouter.ai/))
 
 ### Backend Setup
 
 1. Create virtual environment in root dir (not in backend/, so IDE can connect imports correctly):
 ```bash
-python3 -m venv venv
+python3.13 -m venv venv
 source venv/bin/activate
 ```
 
