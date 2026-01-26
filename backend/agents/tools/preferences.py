@@ -189,6 +189,7 @@ def _update_user_preferences_mongo(
     if budget_max is not None:
         update_fields["budget_max"] = budget_max
 
+    print(f"[DEBUG][_update_user_preferences_mongo] user_id: {user_id}, update_fields: {update_fields}, collection: {collection}")
     # Always upsert to ensure user exists (matches JSON behavior)
     # $setOnInsert sets defaults only when creating a new document
     collection.update_one(
