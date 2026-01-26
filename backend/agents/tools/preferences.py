@@ -91,8 +91,12 @@ def _get_all_user_ids_json() -> list[str]:
 
 def _get_all_user_ids_mongo() -> list[str]:
     collection = get_user_preferences_collection()
-    cursor = collection.find({}, {"user_id": 1})
-    return [doc["user_id"] for doc in cursor if "user_id" in doc]
+    try:
+        cursor = collection.find({}, {"user_id": 1})
+        return [doc["user_id"] for doc in cursor if "user_id" in doc]
+    except Exception as e:
+        print(f"[ERROR][_get_all_user_ids_mongo] Exception: {e}")
+        raise e
 
 
 # -----------------------------------------------------------------------------
@@ -117,7 +121,11 @@ def _get_user_preferences_json(user_id: str) -> dict[str, Any]:
 
 def _get_user_preferences_mongo(user_id: str) -> dict[str, Any]:
     collection = get_user_preferences_collection()
-    doc = collection.find_one({"user_id": user_id})
+    try:
+        doc = collection.find_one({"user_id": user_id})
+    except Exception as e:
+        print(f"[ERROR][_get_user_preferences_mongo] Exception querying user_id={user_id}: {e}")
+        raise e
 
     if doc is None:
         return {
@@ -190,20 +198,23 @@ def _update_user_preferences_mongo(
         update_fields["budget_max"] = budget_max
 
     print(f"[DEBUG][_update_user_preferences_mongo] user_id: {user_id}, update_fields: {update_fields}, collection: {collection}")
-    # Always upsert to ensure user exists (matches JSON behavior)
     # $setOnInsert sets defaults only when creating a new document
+    # Only include fields in $setOnInsert that are NOT in $set to avoid conflicts
+    default_fields = {
+        "user_id": user_id,
+        "location": None,
+        "interests": [],
+        "budget_min": None,
+        "budget_max": None,
+    }
+    set_on_insert = {k: v for k, v in default_fields.items() if k not in update_fields}
+
     try:
         collection.update_one(
             {"user_id": user_id},
             {
                 "$set": update_fields,
-                "$setOnInsert": {
-                    "user_id": user_id,
-                    "location": None,
-                    "interests": [],
-                    "budget_min": None,
-                    "budget_max": None,
-                },
+                "$setOnInsert": set_on_insert,
             },
             upsert=True,
         )

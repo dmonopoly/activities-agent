@@ -394,6 +394,7 @@ def get_transit_stops_between(location_a: str, location_b: str) -> dict[str, Any
         }
 
     except Exception as e:
+        print(f"[ERROR][get_transit_stops_between] Exception: {e}")
         return {
             "stops": [],
             "location_a": location_a,
@@ -680,6 +681,7 @@ def search_places_for_dates(
         )
 
     except Exception as e:
+        print(f"[ERROR][search_places_for_dates] Exception: {e}")
         return _make_response(
             activities=[],
             location1=location1,

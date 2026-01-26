@@ -139,11 +139,13 @@ def get_weather_for_location(
         return weather_info
 
     except requests.exceptions.RequestException as e:
+        print(f"[ERROR][get_weather_for_location] RequestException for location={location}: {e}")
         return {
             "error": f"Failed to fetch weather data: {str(e)}",
             "location": location,
         }
     except Exception as e:
+        print(f"[ERROR][get_weather_for_location] Unexpected exception for location={location}: {e}")
         return {"error": f"Unexpected error: {str(e)}", "location": location}
 
 

@@ -124,12 +124,17 @@ def save_to_sheets(
         }
 
     except HttpError as error:
+        print(f"[ERROR][save_to_sheets] HttpError: {error}")
         return {
             "error": f"An error occurred: {error}",
             "spreadsheet_id": None,
             "spreadsheet_url": None,
         }
     except FileNotFoundError as error:
+        print(f"[ERROR][save_to_sheets] FileNotFoundError: {error}")
+        return {"error": str(error), "spreadsheet_id": None, "spreadsheet_url": None}
+    except Exception as error:
+        print(f"[ERROR][save_to_sheets] Unexpected exception: {error}")
         return {"error": str(error), "spreadsheet_id": None, "spreadsheet_url": None}
 
 
